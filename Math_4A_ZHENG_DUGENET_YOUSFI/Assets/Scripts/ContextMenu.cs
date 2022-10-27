@@ -18,7 +18,16 @@ public class ContextMenu : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(1))
         {
-            menuPanel.SetActive(true);
+            if (menuPanel.activeSelf == false)
+            {
+                menuPanel.SetActive(true);
+                
+            }
+            else
+            {
+                menuPanel.SetActive(false);
+            }
+            
         }
     }
 }
