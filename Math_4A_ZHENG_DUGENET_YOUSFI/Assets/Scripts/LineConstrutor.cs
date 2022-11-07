@@ -6,39 +6,106 @@ public class LineConstrutor : MonoBehaviour
 {
     GameObject Sommet;
     public LineRenderer Line;
-    private int tempcount = 0;
+    public LineRenderer Line2;
+    private int tempcount ;
+    private int tempcount2;
     public Camera cam;
+
+    private bool Isfenetre = true;
     // Start is called before the first frame update
     void Start()
-    {
-        Line.startWidth = .05f;
-        Line.endWidth = .05f;
+    { 
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0)) // click gauche
+        if (Isfenetre)
         {
-            Vector3 point = new Vector3();
-            Event currentEvent = Event.current;
+            if (Input.GetMouseButtonDown(0)) // click gauche
+            {
+                Vector3 point = new Vector3();
+                //Event currentEvent = Event.current;
 
-            // Get the mouse position from Event.
-            // Note that the y position from Event is inverted.
-            //mousePos.x = currentEvent.mousePosition.x;
-            //mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
-            Vector2 mousePos = Input.mousePosition;
+                // Get the mouse position from Event.
+                // Note that the y position from Event is inverted.
+                //mousePos.x = currentEvent.mousePosition.x;
+                //mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
+                Vector2 mousePos = Input.mousePosition;
 
-            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+                point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
 
-            Line.positionCount += 1;
-            Sommet = new GameObject("Sommet");
-            Sommet.transform.position = point;
-            Line.SetPosition(tempcount, Sommet.transform.position);
-            tempcount++;
+                Line.positionCount += 1;
+                Sommet = new GameObject("Sommet");
+                Sommet.transform.position = point;
+                Line.SetPosition(tempcount, Sommet.transform.position);
+                tempcount++;
+            }
+
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                Line.loop=true;
+            }  
+        }
+        else
+        {
+            if (Input.GetMouseButtonDown(0)) // click gauche
+            {
+                Vector3 point = new Vector3();
+                //Event currentEvent = Event.current;
+
+                // Get the mouse position from Event.
+                // Note that the y position from Event is inverted.
+                //mousePos.x = currentEvent.mousePosition.x;
+                //mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
+                Vector2 mousePos = Input.mousePosition;
+
+                point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+
+                Line2.positionCount += 1;
+                Sommet = new GameObject("Sommet");
+                Sommet.transform.position = point;
+                Line2.SetPosition(tempcount2, Sommet.transform.position);
+                tempcount2++;
+            }
+
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                Line2.loop=true;
+            }  
+        }
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            if (Isfenetre)
+            {
+                Isfenetre = false;
+            }
+            else
+            {
+                Isfenetre = true;
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            if (Isfenetre)
+            {
+                Line.positionCount = 0;
+                tempcount = 0;
+                Line.loop = false;
+            }
+            else
+            {
+                Line2.positionCount = 0;
+                tempcount2 = 0;
+                Line2.loop = false;
+            }
         }
 
     }
+    
     /*
     void OnGUI()
     {
