@@ -10,12 +10,14 @@ public class LineConstrutor : MonoBehaviour
     private int tempcount ;
     private int tempcount2;
     public Camera cam;
-
+    public Window win;
+    public Polygon poly;
     private bool Isfenetre = true;
     // Start is called before the first frame update
     void Start()
-    { 
-
+    {
+        win = new Window();
+        poly = new Polygon();
     }
 
     // Update is called once per frame
@@ -26,16 +28,13 @@ public class LineConstrutor : MonoBehaviour
             if (Input.GetMouseButtonDown(0)) // click gauche
             {
                 Vector3 point = new Vector3();
-                //Event currentEvent = Event.current;
 
-                // Get the mouse position from Event.
-                // Note that the y position from Event is inverted.
-                //mousePos.x = currentEvent.mousePosition.x;
-                //mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
                 Vector2 mousePos = Input.mousePosition;
 
                 point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
 
+                win.Sommets.Add(new Vector2(point.x, point.y));
+                
                 Line.positionCount += 1;
                 Sommet = new GameObject("Sommet");
                 Sommet.transform.position = point;
@@ -46,6 +45,7 @@ public class LineConstrutor : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.A))
             {
                 Line.loop=true;
+                win.setNormal();
             }  
         }
         else
@@ -63,6 +63,8 @@ public class LineConstrutor : MonoBehaviour
 
                 point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
 
+                poly.Sommets.Add(new Vector2(point.x, point.y));
+                
                 Line2.positionCount += 1;
                 Sommet = new GameObject("Sommet");
                 Sommet.transform.position = point;
