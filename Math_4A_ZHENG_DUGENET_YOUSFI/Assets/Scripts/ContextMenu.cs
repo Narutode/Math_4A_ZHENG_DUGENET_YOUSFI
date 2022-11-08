@@ -30,4 +30,29 @@ public class ContextMenu : MonoBehaviour
             
         }
     }
+
+    public void Couleurs()
+    {
+        Debug.Log("Couleurs");
+    }
+
+    public void Polygone()
+    {
+        Debug.Log("Polygone");
+    }
+
+    public void Tracé()
+    {
+        Debug.Log("Tracé");
+    }
+
+    public void Fenêtrage()
+    {
+        Debug.Log("Fenêtrage");
+    }
+
+    public void Remplissage()
+    {
+        Debug.Log("Remplissage");
+    }
 }
