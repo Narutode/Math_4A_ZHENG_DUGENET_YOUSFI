@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 public class LineConstrutor : MonoBehaviour
@@ -151,6 +152,33 @@ public class LineConstrutor : MonoBehaviour
             }
         }
 
+    }
+
+   
+
+    public void Couleurs()
+    {
+        
+    }
+
+    public void Polygone()
+    {
+        
+    }
+
+    public void Tracé()
+    {
+        
+    }
+
+    public void Fenêtrage()
+    {
+        
+    }
+
+    public void Remplissage()
+    {
+        
     }
     
     /*
