@@ -53,6 +53,25 @@ public class LineConstrutor : MonoBehaviour
             {
                 Line.loop=true;
                 win.setNormal();
+                //Affichage des normal
+                /*
+                for (int i = 0; i < win.Normals.Count; i++)
+                {
+                    LineRenderer newLine = Instantiate(Line3);
+                    newLine.positionCount += 1;
+                    Sommet = new GameObject("Sommet");
+                    float x = (win.Sommets[i].x + win.Sommets[(i + 1) % win.Sommets.Count].x) / 2;
+                    float y = (win.Sommets[i].y + win.Sommets[(i + 1) % win.Sommets.Count].y) / 2;
+
+                    Sommet.transform.position = new Vector3(x,y,nearClipPlaneWorldPoint);
+                    newLine.SetPosition(0, Sommet.transform.position);
+                        
+                    newLine.positionCount += 1;
+                    Sommet = new GameObject("Sommet");
+                    Sommet.transform.position = new Vector3(x+win.Normals[i].x/3,y+win.Normals[i].y/3,nearClipPlaneWorldPoint);
+                    newLine.SetPosition(1, Sommet.transform.position);
+                }
+                */
             }  
         }
         else

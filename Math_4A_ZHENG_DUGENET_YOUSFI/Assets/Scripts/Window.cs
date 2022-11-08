@@ -26,8 +26,8 @@ public class Window
         float DX, DY, WN, DN;
         Vector2 C;
         int i, Nbseg;
-        tinf = float.MinValue;
-        tsup = float.MaxValue;
+        tinf = float.NegativeInfinity;
+        tsup = float.PositiveInfinity;
 
         DX = x2 - x1;
         DY = y2 - y1;
@@ -40,8 +40,8 @@ public class Window
             DN = DX * Normals[i].x + DY * Normals[i].y;
             WN = (x1 - C.x) * Normals[i].x + (y1 - C.y) * Normals[i].y;
             if (DN == 0)
-                continue;
-            t = -(WN / DN);
+                return (WN >= 0);
+            t = (-WN) / DN;
             if (DN > 0)
             {
                 if (t > tinf)
