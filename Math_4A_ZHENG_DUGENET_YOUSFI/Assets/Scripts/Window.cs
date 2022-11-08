@@ -25,16 +25,14 @@ public class Window
         float t, tinf, tsup;
         float DX, DY, WN, DN;
         Vector2 C;
-        int i, Nbseg;
+        int i;
         tinf = float.NegativeInfinity;
         tsup = float.PositiveInfinity;
 
         DX = x2 - x1;
         DY = y2 - y1;
-
-        Nbseg = nbSomWin - 1;
-
-        for (i = 0; i < Nbseg; i++)
+        
+        for (i = 0; i < nbSomWin; i++)
         {
             C = Sommets[i];
             DN = DX * Normals[i].x + DY * Normals[i].y;
@@ -59,32 +57,26 @@ public class Window
             {
                 return true;
             }
-            else
+
+            if (tinf > 1 || tsup < 0)
             {
-                if (tinf > 1 || tsup < 0)
-                {
-                    return false;
-                }
-                else
-                {
-                    if (tinf < 0)
-                    {
-                        tinf = 0;
-                    }
-
-                    if (tsup > 1)
-                    {
-                        tsup = 1;
-                    }
-
-                    x2 = x1 + DX * tsup;
-                    y2 = y1 + DY * tsup;
-                    x1 = x1 + DX * tinf;
-                    y1 = y1 + DY * tinf;
-                    
-                    return true;
-                }
+                return false;
             }
+
+            if (tinf < 0)
+            {
+                tinf = 0;
+            }
+            else if (tsup > 1)
+            {
+                tsup = 1;
+            }
+
+            x2 = x1 + DX * tsup;
+            y2 = y1 + DY * tsup;
+            x1 = x1 + DX * tinf;
+            y1 = y1 + DY * tinf;
+            return true;
         }
         return false;
     }
