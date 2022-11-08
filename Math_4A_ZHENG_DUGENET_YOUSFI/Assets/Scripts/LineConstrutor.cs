@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class LineConstrutor : MonoBehaviour
@@ -81,15 +82,25 @@ public class LineConstrutor : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.A))
             {
                 Line2.loop=true;
-                var clipSommets = win.CyrusBeck(poly);
-                for (int i = 0; i < clipSommets.Count; i++)
+                for (int i = 0; i < poly.Sommets.Count; i++)
                 {
-                    Line3.positionCount += 1;
-                    Sommet = new GameObject("Sommet");
-                    Sommet.transform.position = new Vector3(clipSommets[i].x,clipSommets[i].y,nearClipPlaneWorldPoint);
-                    Line3.SetPosition(i, Sommet.transform.position);
+                    Vector2 ps1 = poly.Sommets[i];
+                    Vector2 ps2 = poly.Sommets[(i + 1) % poly.Sommets.Count];
+
+                    if (win.CyrusBeck(ref ps1.x,ref ps1.y, ref ps2.x, ref ps2.y))
+                    {
+                        LineRenderer newLine = Instantiate(Line3);
+                        newLine.positionCount += 1;
+                        Sommet = new GameObject("Sommet");
+                        Sommet.transform.position = new Vector3(ps1.x,ps1.y,nearClipPlaneWorldPoint);
+                        newLine.SetPosition(0, Sommet.transform.position);
+                        
+                        newLine.positionCount += 1;
+                        Sommet = new GameObject("Sommet");
+                        Sommet.transform.position = new Vector3(ps2.x,ps2.y,nearClipPlaneWorldPoint);
+                        newLine.SetPosition(1, Sommet.transform.position);
+                    }
                 }
-                //Line3.loop = true;
             }  
         }
 

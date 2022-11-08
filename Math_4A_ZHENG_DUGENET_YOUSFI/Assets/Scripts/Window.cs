@@ -19,90 +19,73 @@ public class Window
         }
     }
 
-    public List<Vector2> CyrusBeck(Polygon poly)
+    public bool CyrusBeck(ref float x1, ref float y1, ref float x2, ref float y2)
     {
-        bool modified = false;
-        Vector2 ps1 = poly.Sommets[0];
-        Vector2 ps2;
-        List<Vector2> SommetInterieurs = new List<Vector2>();
-        
         int nbSomWin = Sommets.Count;
-        for (int k = 0; k < poly.Sommets.Count; k++)
+        float t, tinf, tsup;
+        float DX, DY, WN, DN;
+        Vector2 C;
+        int i, Nbseg;
+        tinf = float.MinValue;
+        tsup = float.MaxValue;
+
+        DX = x2 - x1;
+        DY = y2 - y1;
+
+        Nbseg = nbSomWin - 1;
+
+        for (i = 0; i < Nbseg; i++)
         {
-            if (!modified)
+            C = Sommets[i];
+            DN = DX * Normals[i].x + DY * Normals[i].y;
+            WN = (x1 - C.x) * Normals[i].x + (y1 - C.y) * Normals[i].y;
+            if (DN == 0)
+                continue;
+            t = -(WN / DN);
+            if (DN > 0)
             {
-                ps1 = poly.Sommets[k];
+                if (t > tinf)
+                    tinf = t;
             }
             else
             {
-                modified = false;
+                if (t < tsup)
+                    tsup = t;
             }
-
-            ps2 = poly.Sommets[(k+1)%poly.Sommets.Count];
-
-            float t, tinf, tsup;
-            float DX, DY, WN, DN;
-            Vector2 C;
-            int i, Nbseg;
-
-            tinf = float.MinValue;
-            tsup = float.MaxValue;
-
-            DX = ps2.x - ps1.x;
-            DY = ps2.y - ps1.y;
-
-            Nbseg = nbSomWin - 1;
-
-            for (i = 0; i < Nbseg; i++)
+        }
+        if (tinf < tsup)
+        {
+            if (tinf < 0 && tsup > 1)
             {
-                C = Sommets[i];
-                DN = DX * Normals[i].x + DY * Normals[i].y;
-                WN = (ps1.x - C.x) * Normals[i].x + (ps1.y - C.y) * Normals[i].y;
-                if (DN == 0)
-                    continue;
-                t = -(WN / DN);
-                if (DN > 0)
+                return true;
+            }
+            else
+            {
+                if (tinf > 1 || tsup < 0)
                 {
-                    if (t > tinf)
-                        tinf = t;
+                    return false;
                 }
                 else
                 {
-                    if (t < tsup)
-                        tsup = t;
-                }
-            }
-            if (tinf < tsup)
-            {
-                if (tinf < 0 && tsup > 1)
-                {
-                    SommetInterieurs.Add(ps1);
-                    //SommetInterieurs.Add(ps2);
-                }
-                else
-                {
-                    if (tinf < 1 && tsup > 0)
+                    if (tinf < 0)
                     {
-                        if (tinf < 0)
-                        {
-                            tinf = 0;
-                        }
-
-                        if (tsup > 1)
-                        {
-                            tsup = 1;
-                        }
-
-                        Vector2 newPs1 = new Vector2(ps1.x + DX * tinf,ps1.y + DY * tinf);
-                        Vector2 newPs2 = new Vector2(ps1.x + DX * tsup,ps1.y + DY * tsup);
-                        ps1 = newPs2;
-                        modified = true;
-                        SommetInterieurs.Add(newPs1);
-                        //SommetInterieurs.Add(newPs2);
+                        tinf = 0;
                     }
+
+                    if (tsup > 1)
+                    {
+                        tsup = 1;
+                    }
+
+                    x2 = x1 + DX * tsup;
+                    y2 = y1 + DY * tsup;
+                    x1 = x1 + DX * tinf;
+                    y1 = y1 + DY * tinf;
+                    
+                    return true;
                 }
             }
         }
-        return SommetInterieurs;
+        return false;
     }
 }
