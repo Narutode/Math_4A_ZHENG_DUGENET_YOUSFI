@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
 
 public class LineConstrutor : MonoBehaviour
@@ -7,12 +8,16 @@ public class LineConstrutor : MonoBehaviour
     GameObject Sommet;
     public LineRenderer Line;
     public LineRenderer Line2;
+    public LineRenderer Line3;
+
     private int tempcount ;
     private int tempcount2;
     public Camera cam;
     public Window win;
     public Polygon poly;
     private bool Isfenetre = true;
+
+    private float nearClipPlaneWorldPoint = 0;
     // Start is called before the first frame update
     void Start()
     {
@@ -32,7 +37,8 @@ public class LineConstrutor : MonoBehaviour
                 Vector2 mousePos = Input.mousePosition;
 
                 point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-
+                if (nearClipPlaneWorldPoint == 0)
+                    nearClipPlaneWorldPoint = point.z;
                 win.Sommets.Add(new Vector2(point.x, point.y));
                 
                 Line.positionCount += 1;
@@ -75,6 +81,15 @@ public class LineConstrutor : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.A))
             {
                 Line2.loop=true;
+                var clipSommets = win.CyrusBeck(poly);
+                for (int i = 0; i < clipSommets.Count; i++)
+                {
+                    Line3.positionCount += 1;
+                    Sommet = new GameObject("Sommet");
+                    Sommet.transform.position = new Vector3(clipSommets[i].x,clipSommets[i].y,nearClipPlaneWorldPoint);
+                    Line3.SetPosition(i, Sommet.transform.position);
+                }
+                //Line3.loop = true;
             }  
         }
 
