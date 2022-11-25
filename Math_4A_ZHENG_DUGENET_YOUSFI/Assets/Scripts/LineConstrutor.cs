@@ -119,6 +119,9 @@ public class LineConstrutor : MonoBehaviour
                             Sommet = new GameObject("Sommet");
                             Sommet.transform.position = new Vector3(ps2.x,ps2.y,nearClipPlaneWorldPoint);
                             newLine.SetPosition(1, Sommet.transform.position);
+
+                            newLine.startWidth = .01f;
+                            newLine.endWidth = .01f;
                         }
                     }
                 }  

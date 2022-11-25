@@ -10,6 +10,7 @@ public class Window
     public List<Vector2> Normals = new List<Vector2>();
 
     public void setNormal() {
+        //Calcul des normals
         for (int i = 0; i < Sommets.Count; i++)
         {
             Vector2 s1 = Sommets[i];
