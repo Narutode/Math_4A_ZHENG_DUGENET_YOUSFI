@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Window
 {
+    //fenètrage
     public List<Vector2> Sommets = new List<Vector2>();
     public List<Vector2> Normals = new List<Vector2>();
 
