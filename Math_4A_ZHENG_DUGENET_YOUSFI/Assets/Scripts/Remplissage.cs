@@ -73,4 +73,101 @@ public class Remplissage : MonoBehaviour
         }
         
     }
+
+    public void RemplissageLigne(int x, int y, Color CC, Color CR)
+    {
+        Color CP, CPd, CPg;
+        int xd, xg;
+        int[,] pile = {};
+        //empiler(x,y)
+
+        while (pile.Length != 0)
+        {
+            //stockage sommet 
+            //dépiler p
+            
+            CP = t2d.GetPixel(x, y);
+            
+            /* On détermine les abscisses extrêmes xg et xd de la ligne de balayage (y) du germe courant */
+            /* Recherche de xd : extrême à droite */
+            
+            xd = x + 1;
+            CPd = CP;
+            while (CPd != CC)
+            {
+                xd = xd + 1;
+                CPd = t2d.GetPixel(xd, y);
+            }
+            xd--;
+            /* Recherche de xg : extrême à gauche */
+            xg = x - 1;
+            CPg = CP;
+            while (CPg != CC)
+            {
+                xg--;
+                CPg = t2d.GetPixel(xg, y);
+            }
+
+            xg++;
+            
+            /* Affichage de la ligne de balayage de xg à xd, avec la couleur CR */
+            
+            //afficheLigne(xg,y,xd,y,CR)
+            
+            /* Recherche de nouveaux germes sur la ligne de balayage au-dessus :
+            la recherche s'effectue entre xg et xd */
+            x = xd;
+            CP = t2d.GetPixel(x, y + 1);
+
+            while (x>xg)
+            {
+                while ((CP == CC || CP == CR) && x > xg)
+                {
+                    x--;
+                    CP = t2d.GetPixel(x, y + 1);
+                }
+
+                if (x > xg && CP != CC && CP != CR)
+                {
+                    /* On empile le nouveau germe au-dessus trouvé */
+                    //empile((x,y+1),p)
+                }
+
+                while (CP != CC && x > xg)
+                {
+                    x--;
+                    CP = t2d.GetPixel(x, y + 1);
+                }
+            }
+            
+            /* Recherche de nouveaux germes sur la ligne de balayage au-dessous :
+            la recherche s'effectue entre xg et xd */
+
+            x = xd;
+            CP = t2d.GetPixel(x, y - 1);
+            while (x > xg)
+            {
+                while ((CP == CC || CP == CR) && x > xg)
+                {
+                    x--;
+                    CP = t2d.GetPixel(x, y - 1);
+                }
+
+                if (x > xg && CP != CC && CP != CR)
+                {
+                    /* On empile le nouveau germe au-dessous trouvé */
+                    //empile((x,y-1),p)
+                }
+
+                while (CP != CC && x > xg)
+                {
+                    x--;
+                    CP = t2d.GetPixel(x, y - 1);
+                }
+            }
+
+        }
+        
+        
+    }
 }
