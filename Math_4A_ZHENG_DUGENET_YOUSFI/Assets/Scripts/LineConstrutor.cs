@@ -209,7 +209,11 @@ public class LineConstrutor : MonoBehaviour
 
     public void Tracé()
     {   
-        //tracé = true;
+        
+        
+        tracé = true;
+        isPoly = false;
+        Isfenetre = true;
         
         menuPanel.SetActive(false);
         
@@ -217,11 +221,7 @@ public class LineConstrutor : MonoBehaviour
 
     public void Fenêtrage()
     {
-        /*
-        tracé = true;
-        isPoly = false;
-        Isfenetre = true;
-        */
+        
         menuPanel.SetActive(false);
         fenêtragePanel.SetActive(true);
     }
