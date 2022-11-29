@@ -1633,8 +1633,8 @@ LineRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0
-        value: 0.15044564
+        time: 0.0037384033
+        value: 0.24562073
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -4508,7 +4508,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.15044564
+        value: 0.2368393
         inSlope: 0
         outSlope: 0
         tangentMode: 0
