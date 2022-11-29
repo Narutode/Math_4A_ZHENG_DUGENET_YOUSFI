@@ -94,7 +94,7 @@ public class Window
         return det != 0;
     }
     
-    public Vector2 intersect(Vector2 P1, Vector2 P2, Vector2 P3, Vector2 P4)
+    public (Vector2,Boolean) intersect(Vector2 P1, Vector2 P2, Vector2 P3, Vector2 P4)
     {
         float a = P2.x - P1.x;
         float b = P3.x - P4.x;
@@ -106,32 +106,67 @@ public class Window
         
         float det = a * d - b * c;
 
+        if(det == 0)
+            return (Vector2.zero,false);
+        
         float invA = a / det;
         float invB = b / det;
         float invC = c / det;
         float invD = d / det;
 
-        float t = a * e + b * f;
+        float t = invA * e + invB * f;
+        float s = invC * e + invD * f;
 
-        return P1 + (P2 - P1) * t;
+        if(s is >= 0 and <= 1) 
+            return (P3 + (P4 - P3) * s,true);
+        if(t is >= 0 and <= 1) 
+            return (P1 + (P2 - P1) * t,true);
+        return (Vector2.zero,false);
     }
 
     public Boolean visible(Vector2 P1, Vector2 P2, Vector2 n)
     {
         Vector2 dir = new Vector2(P1.x - P2.x, P1.x - P2.x);
         double prodScalaire = Vector2.Dot(dir, n);
-        return prodScalaire >= 0;
+        return prodScalaire <= 0;
     }
 
     public List<Vector2> SutherlandHodgman(List<Vector2> poly)
     {
-        List<Vector2> newPoly;
+        
+        (Vector2, Boolean) tmpI;
+        Vector2 F0,I,C0,C1,F1;
+        List<Vector2> newPoly = new List<Vector2>();
+        newPoly.AddRange(poly);
         for (int i = 0; i < Sommets.Count; i++)
         {
-            //Vector2 C = Sommets[i];
-            int newPolyCount = 0;
-            
+            C0 = Sommets[i];
+            C1 = Sommets[(i + 1) % Sommets.Count];
+            poly.Clear();
+            poly.AddRange(newPoly);
+            newPoly.Clear();
+            for (int j = 0; j < poly.Count; j++)
+            {
+                F1 = poly[j];
+                F0 = poly[(j-1)%poly.Count];
+                tmpI = intersect(F0, F1, C0, C1);
+                if (tmpI.Item2)
+                {
+                    if (visible(C0, F1, Normals[i]))
+                    {
+                        if (!visible(C0, F0, Normals[i]))
+                        {
+                            newPoly.Add(tmpI.Item1);
+                        }
+                        newPoly.Add(F1);
+                    }
+                    else if (visible(C0, F0, Normals[i]))
+                    {
+                        newPoly.Add(tmpI.Item1);
+                    }
+                }
+            }
         }
-        return newPoly;
+        return poly;
     }
 }
