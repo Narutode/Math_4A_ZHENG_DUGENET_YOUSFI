@@ -8,6 +8,8 @@ using UnityEngine;
 public class LineConstrutor : MonoBehaviour
 {
     public GameObject menuPanel;
+    public GameObject fenêtragePanel;
+    public GameObject remplissagePanel;
     GameObject Sommet;
     public LineRenderer Line;
     public LineRenderer Line2;
@@ -33,6 +35,22 @@ public class LineConstrutor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetMouseButtonDown(1))
+        {
+            fenêtragePanel.SetActive(false);
+            remplissagePanel.SetActive(false);
+            
+            if (menuPanel.activeSelf == false)
+            {
+                menuPanel.SetActive(true);
+
+            }
+            else
+            {
+                menuPanel.SetActive(false);
+            }
+        }
+
         if (tracé)
         {
 
@@ -199,15 +217,19 @@ public class LineConstrutor : MonoBehaviour
 
     public void Fenêtrage()
     {
+        /*
         tracé = true;
         isPoly = false;
         Isfenetre = true;
+        */
         menuPanel.SetActive(false);
+        fenêtragePanel.SetActive(true);
     }
 
     public void Remplissage()
     {
         menuPanel.SetActive(false);
+        remplissagePanel.SetActive(true);
     }
 
     public void Clear()
@@ -225,6 +247,13 @@ public class LineConstrutor : MonoBehaviour
             Line2.loop = false;
         }
         menuPanel.SetActive(false);
+    }
+
+    public void Retour()
+    {
+        fenêtragePanel.SetActive(false);
+        remplissagePanel.SetActive(false);
+        menuPanel.SetActive(true);
     }
     
     /*

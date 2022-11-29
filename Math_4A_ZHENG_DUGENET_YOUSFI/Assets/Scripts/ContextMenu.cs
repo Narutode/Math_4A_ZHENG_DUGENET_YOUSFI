@@ -16,6 +16,7 @@ public class ContextMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        /*
         //Menu clique droite
         if (Input.GetMouseButtonDown(1))
         {
@@ -30,6 +31,7 @@ public class ContextMenu : MonoBehaviour
             }
             
         }
+        */
     }
 
    
