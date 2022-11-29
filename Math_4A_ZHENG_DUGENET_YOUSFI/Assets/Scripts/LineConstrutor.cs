@@ -23,6 +23,7 @@ public class LineConstrutor : MonoBehaviour
     private bool Isfenetre = false;
     private bool isPoly = false;
     private bool tracé = false;
+    private bool cyrusBeck = false;
 
     private float nearClipPlaneWorldPoint = 0;
     // Start is called before the first frame update
@@ -133,29 +134,49 @@ public class LineConstrutor : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.A))
                 {
                     Line2.loop = true;
-                    for (int i = 0; i < poly.Sommets.Count; i++)
+                    if (cyrusBeck)
                     {
-                        Vector2 ps1 = poly.Sommets[i];
-                        Vector2 ps2 = poly.Sommets[(i + 1) % poly.Sommets.Count];
-
-                        if (win.CyrusBeck(ref ps1.x, ref ps1.y, ref ps2.x, ref ps2.y))
+                        for (int i = 0; i < poly.Sommets.Count; i++)
                         {
-                            LineRenderer newLine = Instantiate(Line3);
-                            newLine.positionCount += 1;
-                            Sommet = new GameObject("Sommet");
-                            Sommet.transform.position = new Vector3(ps1.x, ps1.y, nearClipPlaneWorldPoint);
-                            newLine.SetPosition(0, Sommet.transform.position);
+                            Vector2 ps1 = poly.Sommets[i];
+                            Vector2 ps2 = poly.Sommets[(i + 1) % poly.Sommets.Count];
 
-                            newLine.positionCount += 1;
-                            Sommet = new GameObject("Sommet");
-                            Sommet.transform.position = new Vector3(ps2.x, ps2.y, nearClipPlaneWorldPoint);
-                            newLine.SetPosition(1, Sommet.transform.position);
+                            if (win.CyrusBeck(ref ps1.x, ref ps1.y, ref ps2.x, ref ps2.y))
+                            {
+                                LineRenderer newLine = Instantiate(Line3);
+                                newLine.positionCount += 1;
+                                Sommet = new GameObject("Sommet");
+                                Sommet.transform.position = new Vector3(ps1.x, ps1.y, nearClipPlaneWorldPoint);
+                                newLine.SetPosition(0, Sommet.transform.position);
 
-                            newLine.startWidth = 0.01f;
-                            newLine.endWidth = 0.01f;
+                                newLine.positionCount += 1;
+                                Sommet = new GameObject("Sommet");
+                                Sommet.transform.position = new Vector3(ps2.x, ps2.y, nearClipPlaneWorldPoint);
+                                newLine.SetPosition(1, Sommet.transform.position);
+
+                                newLine.startWidth = .01f;
+                                newLine.endWidth = .01f;
+                            }
                         }
                     }
+                    else
+                    {
+                        List<Vector2> newPoly = win.SutherlandHodgman(poly.Sommets);
+                        LineRenderer newLine = Instantiate(Line3);
 
+                        for (int i = 0; i < newPoly.Count; i++)
+                        {
+                            Vector2 ps1 = newPoly[i];
+
+                            newLine.positionCount += 1;
+                            Sommet = new GameObject("Sommet New poly");
+                            Sommet.transform.position = new Vector3(ps1.x, ps1.y, nearClipPlaneWorldPoint);
+                            newLine.SetPosition(i, Sommet.transform.position);
+                        }
+                        newLine.startWidth = .01f;
+                        newLine.endWidth = .01f;
+                        newLine.loop = true;
+                    }
                     tracé = false;
                 }
             }
