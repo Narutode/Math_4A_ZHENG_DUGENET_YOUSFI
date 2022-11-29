@@ -8,8 +8,13 @@ using UnityEngine;
 public class LineConstrutor : MonoBehaviour
 {
     public GameObject menuPanel;
+    public GameObject tracerMenu;
+    public GameObject validerMenu;
     public GameObject fenêtragePanel;
     public GameObject remplissagePanel;
+    public GameObject fermerForme;
+    
+    
     GameObject Sommet;
     public LineRenderer Line;
     public LineRenderer Line2;
@@ -37,8 +42,12 @@ public class LineConstrutor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+       
+        
+        
         if (Input.GetMouseButtonDown(1))
         {
+            tracé = false;
             fenêtragePanel.SetActive(false);
             remplissagePanel.SetActive(false);
             
@@ -133,8 +142,10 @@ public class LineConstrutor : MonoBehaviour
                 //tracer le polygone
                 if (Input.GetKeyDown(KeyCode.A))
                 {
+                    
+                    
                     Line2.loop = true;
-                    if (cyrusBeck)
+                    if (cyrusBeck) //CyrusBeck
                     {
                         for (int i = 0; i < poly.Sommets.Count; i++)
                         {
@@ -159,7 +170,7 @@ public class LineConstrutor : MonoBehaviour
                             }
                         }
                     }
-                    else
+                    else //Sutherland
                     {
                         List<Vector2> newPoly = win.SutherlandHodgman(poly.Sommets);
                         LineRenderer newLine = Instantiate(Line3);
@@ -216,67 +227,150 @@ public class LineConstrutor : MonoBehaviour
         }
 
    
-
+    // BOUTONS MENU
     public void Couleurs()
     {
         menuPanel.SetActive(false);
     }
 
-    public void Polygone()
-    {
-        tracé = true;
-        Isfenetre = false;
-        isPoly = true;
+    
+
+    public void Tracer()
+    {   
         menuPanel.SetActive(false);
+        tracerMenu.SetActive(true);
+        
+        
+        menuPanel.SetActive(false);
+        
     }
 
-    public void Tracé()
-    {   
-        
+    public void Fenêtre()
+    {
+        tracerMenu.SetActive(false);
+        fermerForme.SetActive(true);
         
         tracé = true;
         isPoly = false;
         Isfenetre = true;
+    }
+    
+    public void Polygone()
+    {
+        tracerMenu.SetActive(false);
+        fermerForme.SetActive(true);
+        tracé = true;
+        Isfenetre = false;
+        isPoly = true;
         
+    }
+
+    public void FermerForme()
+    {
+        if (Isfenetre)
+        {
+            Line.loop = true;
+            win.setNormal();
+            tracé = false;
+        }
+        else if (isPoly)
+        {
+            Line2.loop = true;
+            tracé = false;
+        }
+        
+        fermerForme.SetActive(false);
+        
+        
+    }
+
+    public void Valider()
+    {
         menuPanel.SetActive(false);
-        
+        validerMenu.SetActive(true);
     }
 
     public void Fenêtrage()
     {
-        
+        validerMenu.SetActive(false);
         menuPanel.SetActive(false);
         fenêtragePanel.SetActive(true);
     }
 
     public void Remplissage()
     {
+        validerMenu.SetActive(false);
         menuPanel.SetActive(false);
         remplissagePanel.SetActive(true);
     }
 
     public void Clear()
     {
-        if (Isfenetre)
-        {
+        
             Line.positionCount = 0;
             tempcount = 0;
             Line.loop = false;
-        }
-        else
-        {
+        
+        
             Line2.positionCount = 0;
             tempcount2 = 0;
             Line2.loop = false;
-        }
-        menuPanel.SetActive(false);
+        
+        
     }
 
-    public void Retour()
+    
+    public void RetourTrace()
+    {
+        tracerMenu.SetActive(false);
+        menuPanel.SetActive(true);
+    }
+    public void RetourValider()
+    {
+        validerMenu.SetActive(false);
+        menuPanel.SetActive(true);
+    }
+
+    public void RetourFR()
     {
         fenêtragePanel.SetActive(false);
         remplissagePanel.SetActive(false);
-        menuPanel.SetActive(true);
+        validerMenu.SetActive(true);
+    }
+
+    public void CyrusBeckMenu()
+    {
+        
+    }
+
+    public void SutherlandMenu()
+    {
+        
+    }
+
+    public void DécoupageQuelconque()
+    {
+        
+    }
+
+    public void GermesRécursive()
+    {
+        
+    }
+
+    public void GermesPile()
+    {
+        
+    }
+
+    public void LigneBalayage()
+    {
+        
+    }
+
+    public void LCA()
+    {
+        
     }
     
     /*

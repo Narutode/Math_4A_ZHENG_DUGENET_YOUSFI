@@ -111,12 +111,12 @@ public class Remplissage : MonoBehaviour
     {
         Color CP, CPd, CPg;
         int xd, xg;
-        int[,] pile = {};
+        int[,] pile = {}; /* initialisation de la pile à vide */
         //empiler(x,y)
 
-        while (pile.Length != 0)
+        while (pile.Length != 0) /* un germe à traiter */
         {
-            //stockage sommet 
+            //(x,y) <- sommetPile(p) /* stockage du sommet */
             //dépiler p
             
             CP = t2d.GetPixel(x, y);
