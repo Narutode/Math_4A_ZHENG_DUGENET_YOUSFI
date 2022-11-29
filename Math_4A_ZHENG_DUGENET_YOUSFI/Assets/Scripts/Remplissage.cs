@@ -5,31 +5,35 @@ using UnityEngine;
 public class Remplissage : MonoBehaviour
 {
     private Texture2D t2d;
+    public Camera cam;
     // Start is called before the first frame update
     void Start()
     {
-        
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R)){// click gauche
-            RemplissageRegionConnexite(0,0,Color.black,Color.red);
+        if (Input.GetKeyDown(KeyCode.F)){// click F
+            Vector3 point = new Vector3();
+            Vector2 mousePos = Input.mousePosition;
+            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+            RemplissageRegionConnexite(point.x,point.y,point.z,Color.black,Color.red);
          }
                         
     }
 
-    public void RemplissageRegionConnexite(int x,int y,Color ColorContour,Color ColorRemplissage)
+    public void RemplissageRegionConnexite(float x,float y,float z,Color ColorContour,Color ColorRemplissage)
     {
-        var colorPixelCourant = t2d.GetPixel(x, y);
+        //var colorPixelCourant = t2d.GetPixel(x, y);
+        var colorPixelCourant = Color.gray;
         if (ColorContour != colorPixelCourant && ColorRemplissage != colorPixelCourant)
         {
-            //AffichePixel(x,y,CR);
-            RemplissageRegionConnexite(x,y-1,ColorContour,ColorRemplissage); //Bas
-            RemplissageRegionConnexite(x-1,y,ColorContour,ColorRemplissage); //Gauche
-            RemplissageRegionConnexite(x,y+1,ColorContour,ColorRemplissage); //Haut
-            RemplissageRegionConnexite(x+1,y,ColorContour,ColorRemplissage); //Droite
+            AffichePixel(x,y,z,ColorRemplissage);
+            RemplissageRegionConnexite(x,y-0.001f,z,ColorContour,ColorRemplissage); //Bas
+            RemplissageRegionConnexite(x-0.001f,y,z,ColorContour,ColorRemplissage); //Gauche
+            RemplissageRegionConnexite(x,y+0.001f,z,ColorContour,ColorRemplissage); //Haut
+            RemplissageRegionConnexite(x+0.001f,y,z,ColorContour,ColorRemplissage); //Droite   
         }
     }
 
@@ -73,4 +77,22 @@ public class Remplissage : MonoBehaviour
         }
         
     }
+
+    public void AffichePixel(float i, float j,float z, Color colorCube)
+    {
+        GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        plane.transform.position = new Vector3(i, j, z);
+        plane.transform.localScale = new Vector3(0.0001f, 0.0001f, 0.0001f);
+        plane.transform.Rotate(-90, 0, 0,Space.Self);
+        foreach(GameObject gameObj in GameObject.FindObjectsOfType<GameObject>())
+        {
+            if(gameObj.name == "Plane")
+            {
+                gameObj.GetComponent<Renderer>().material.color = colorCube;
+            }
+        }
+        
+
+    }
+    
 }

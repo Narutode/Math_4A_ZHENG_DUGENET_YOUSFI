@@ -30,6 +30,7 @@ public class LineConstrutor : MonoBehaviour
     {
         win = new Window();
         poly = new Polygon();
+
     }
 
     // Update is called once per frame
@@ -74,6 +75,7 @@ public class LineConstrutor : MonoBehaviour
                     Sommet.transform.position = point;
                     Line.SetPosition(tempcount, Sommet.transform.position);
                     tempcount++;
+                    
                 }
 
                 //fermer le polygone
@@ -149,8 +151,8 @@ public class LineConstrutor : MonoBehaviour
                             Sommet.transform.position = new Vector3(ps2.x, ps2.y, nearClipPlaneWorldPoint);
                             newLine.SetPosition(1, Sommet.transform.position);
 
-                            newLine.startWidth = .01f;
-                            newLine.endWidth = .01f;
+                            newLine.startWidth = 0.01f;
+                            newLine.endWidth = 0.01f;
                         }
                     }
 
