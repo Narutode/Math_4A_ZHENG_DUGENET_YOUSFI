@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Remplissage : MonoBehaviour
 {
-    private Texture2D t2d;
+    public Texture2D t2d = null;
     public Camera cam;
     Color ColorBack = Color.black;
     Color colorCube = Color.white;
@@ -17,32 +17,58 @@ public class Remplissage : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            Debug.Log("g press");
+            if(t2d == null)
+                StartCoroutine(GetScreenshot());
+        }
+
         if (Input.GetKeyDown(KeyCode.F)){// click F
-            t2d = GetScreenshot();
-            Vector3 point = new Vector3();
-            Vector2 mousePos = Input.mousePosition;
-            //point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            RemplissageRegionConnexite((int)mousePos.x,(int)mousePos.y,cam.nearClipPlane);
+            Debug.Log("f press");
+            if (t2d != null)
+            {
+                Debug.Log("t2d != null");
+                //Vector3 point = new Vector3();
+                Vector2 mousePos = Input.mousePosition;
+                //point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+                RemplissageRegionConnexite((int) mousePos.x, (int) mousePos.y, cam.nearClipPlane);
+            }
         }
     }
-    Texture2D GetScreenshot()
+    
+    IEnumerator GetScreenshot()
     {
+        yield return new WaitForEndOfFrame();
         Rect viewRect = cam.pixelRect;
         Texture2D tex = new Texture2D( (int)viewRect.width, (int)viewRect.height, TextureFormat.RGB24, false );
         tex.ReadPixels( viewRect, 0, 0, false );
         tex.Apply( false );
-        return tex;
+        t2d = tex;
     }
+    
     public void RemplissageRegionConnexite(int x,int y,float z)
     {
-        var colorPixelCourant = t2d.GetPixel(x, y);
         //var colorPixelCourant = Color.gray;
-        if (ColorBack == colorPixelCourant)
+        AffichePixel(x,y,z);
+        var colorPixelCourant = t2d.GetPixel(x, y-1);
+        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
         {
-            AffichePixel(x,y,z);
-            RemplissageRegionConnexite(x,y-1,z); //Bas
+            RemplissageRegionConnexite(x, y - 1, z);//Bas
+        } 
+        colorPixelCourant = t2d.GetPixel(x-1, y);
+        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+        {
             RemplissageRegionConnexite(x-1,y,z); //Gauche
+        } 
+        colorPixelCourant = t2d.GetPixel(x, y+1);
+        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+        {
             RemplissageRegionConnexite(x,y+1,z); //Haut
+        }
+        colorPixelCourant = t2d.GetPixel(x+1, y);
+        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+        {
             RemplissageRegionConnexite(x+1,y,z); //Droite   
         }
     }
@@ -60,7 +86,6 @@ public class Remplissage : MonoBehaviour
             if (colorPixelCourant != ColorContour && colorPixelCourant != ColorRemplissage)
             {
                 //AffichePixel(x,y,CR);
-                
             }
 
             colorPixelCourant = t2d.GetPixel(x, y - 1);
@@ -83,9 +108,7 @@ public class Remplissage : MonoBehaviour
             {
                 //empiler(x+1,y)
             }
-
         }
-        
     }
 
     public void AffichePixel(float i, float j,float z)
