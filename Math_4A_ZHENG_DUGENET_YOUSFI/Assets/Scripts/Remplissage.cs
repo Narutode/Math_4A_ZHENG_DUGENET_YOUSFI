@@ -8,6 +8,8 @@ public class Remplissage : MonoBehaviour
     public Camera cam;
     Color ColorBack = Color.black;
     Color colorCube = Color.white;
+
+    private bool[,] tab = new bool[1000,1000];
     // Start is called before the first frame update
     void Start()
     {
@@ -32,7 +34,7 @@ public class Remplissage : MonoBehaviour
                 //Vector3 point = new Vector3();
                 Vector2 mousePos = Input.mousePosition;
                 //point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-                RemplissageRegionConnexite((int) mousePos.x, (int) mousePos.y, cam.nearClipPlane);
+                StartCoroutine(RemplissageRegionConnexite((int) mousePos.x, (int) mousePos.y, cam.nearClipPlane));
             }
         }
     }
@@ -47,29 +49,22 @@ public class Remplissage : MonoBehaviour
         t2d = tex;
     }
     
-    public void RemplissageRegionConnexite(int x,int y,float z)
+    public IEnumerator RemplissageRegionConnexite(int x,int y,float z)
     {
         //var colorPixelCourant = Color.gray;
-        AffichePixel(x,y,z);
-        var colorPixelCourant = t2d.GetPixel(x, y-1);
-        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+        if (!tab[x, y])
         {
-            RemplissageRegionConnexite(x, y - 1, z);//Bas
-        } 
-        colorPixelCourant = t2d.GetPixel(x-1, y);
-        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
-        {
-            RemplissageRegionConnexite(x-1,y,z); //Gauche
-        } 
-        colorPixelCourant = t2d.GetPixel(x, y+1);
-        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
-        {
-            RemplissageRegionConnexite(x,y+1,z); //Haut
-        }
-        colorPixelCourant = t2d.GetPixel(x+1, y);
-        if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
-        {
-            RemplissageRegionConnexite(x+1,y,z); //Droite   
+            AffichePixel(x,y,z);
+            tab[x, y] = true;
+            var colorPixelCourant = t2d.GetPixel(x, y);
+            yield return null;
+            if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+            {
+                StartCoroutine(RemplissageRegionConnexite(x, y - 1, z)); //Bas
+                StartCoroutine(RemplissageRegionConnexite(x - 1, y, z)); //Gauche
+                StartCoroutine(RemplissageRegionConnexite(x, y + 1, z)); //Haut
+                StartCoroutine(RemplissageRegionConnexite(x + 1, y, z)); //Droite
+            }
         }
     }
 
