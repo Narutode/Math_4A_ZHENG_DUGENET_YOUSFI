@@ -19,8 +19,13 @@ public class Remplissage : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F)){// click F
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            Debug.Log("g press");
             if(t2d == null)StartCoroutine(GetScreenshot());
+        }
+        if (Input.GetKeyDown(KeyCode.F)){// click F
+            
             Debug.Log("f press");
             if (t2d != null)
             {
@@ -29,6 +34,18 @@ public class Remplissage : MonoBehaviour
                 Vector2 mousePos = Input.mousePosition;
                 //point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
                 StartCoroutine(RemplissageRegionConnexite((int) mousePos.x, (int) mousePos.y, cam.nearClipPlane));
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.P)){// click P
+            
+            Debug.Log("P press");
+            if (t2d != null)
+            {
+                Debug.Log("t2d != null");
+                //Vector3 point = new Vector3();
+                Vector2 mousePos = Input.mousePosition;
+                //point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+                RemplissageRegionConnexitePile((int) mousePos.x, (int) mousePos.y, cam.nearClipPlane);
             }
         }
     }
@@ -62,41 +79,61 @@ public class Remplissage : MonoBehaviour
         }
     }
 
-    public void RemplissageRegionConnexitePile(int x, int y, Color ColorContour, Color ColorRemplissage)
+    public void RemplissageRegionConnexitePile(int x, int y,float z)
     {
-        
-        int[,] pile = {};
-        //empiler(x,y)
-        while (pile != null)
+        List<Vector2> empile = new List<Vector2>();
+        List<Vector2> empile2 = new List<Vector2>();
+        empile.Add(new Vector2(x,y));
+        tab[x, y] = true;
+        while (empile.Count > 0)
         {
-            //stokage du sommet dans pile
-            //dépiler p
-            var colorPixelCourant = t2d.GetPixel(x, y);
-            if (colorPixelCourant != ColorContour && colorPixelCourant != ColorRemplissage)
+            Debug.Log(empile.Count);
+            foreach (var vector2 in empile)
             {
-                //AffichePixel(x,y,CR);
-            }
+                AffichePixel(vector2.x,vector2.y,z);
+                if (!tab[(int) vector2.x + 10, (int) vector2.y])
+                {
+                    var colorPixelCourant = t2d.GetPixel((int) vector2.x + 10, (int) vector2.y);
+                    if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+                    {
+                        tab[(int) vector2.x+10, (int) vector2.y] = true;
+                        empile2.Add(new Vector2((int)vector2.x + 10,(int) vector2.y));
+                    }
+                }
+                if (!tab[(int) vector2.x - 10, (int) vector2.y])
+                {
+                    var colorPixelCourant = t2d.GetPixel((int) vector2.x - 10, (int) vector2.y);
+                    if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+                    {
+                        tab[(int) vector2.x-10, (int) vector2.y] = true;
 
-            colorPixelCourant = t2d.GetPixel(x, y - 1);
-            if (colorPixelCourant != ColorContour && colorPixelCourant != ColorRemplissage)
-            {
-                //empiler(x,y-1)
+                        empile2.Add(new Vector2((int)vector2.x - 10, (int)vector2.y));
+                    }
+                }
+                if (!tab[(int) vector2.x, (int) vector2.y+ 10])
+                {
+                    var colorPixelCourant = t2d.GetPixel((int) vector2.x, (int) vector2.y+ 10);
+                    if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+                    {
+                        tab[(int) vector2.x, (int) vector2.y+10] = true;
+
+                        empile2.Add(new Vector2((int)vector2.x, (int)vector2.y+ 10));
+                    }
+                }
+                if (!tab[(int) vector2.x, (int) vector2.y- 10])
+                {
+                    var colorPixelCourant = t2d.GetPixel((int) vector2.x, (int) vector2.y- 10);
+                    if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
+                    {
+                        tab[(int) vector2.x, (int) vector2.y-10] = true;
+
+                        empile2.Add(new Vector2((int)vector2.x, (int)vector2.y- 10));
+                    }
+                }
             }
-            colorPixelCourant = t2d.GetPixel(x-1, y);
-            if (colorPixelCourant != ColorContour && colorPixelCourant != ColorRemplissage)
-            {
-                //empiler(x-1,y)
-            }
-            colorPixelCourant = t2d.GetPixel(x, y + 1);
-            if (colorPixelCourant != ColorContour && colorPixelCourant != ColorRemplissage)
-            {
-                //empiler(x,y+1)
-            }
-            colorPixelCourant = t2d.GetPixel(x+1, y);
-            if (colorPixelCourant != ColorContour && colorPixelCourant != ColorRemplissage)
-            {
-                //empiler(x+1,y)
-            }
+            empile.Clear();
+            empile.AddRange(empile2);
+            empile2.Clear();
         }
     }
 
