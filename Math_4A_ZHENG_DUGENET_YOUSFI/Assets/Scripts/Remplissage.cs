@@ -111,7 +111,7 @@ public class Remplissage : MonoBehaviour
         GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
         Vector3 point = cam.ScreenToWorldPoint(new Vector3(i, j, cam.nearClipPlane));
         plane.transform.position = new Vector3(point.x, point.y, z);
-        plane.transform.localScale = new Vector3(0.0001f, 0.0001f, 0.0001f);
+        plane.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
         plane.transform.Rotate(-90, 0, 0,Space.Self);
         foreach(GameObject gameObj in GameObject.FindObjectsOfType<GameObject>())
         {
