@@ -19,14 +19,8 @@ public class Remplissage : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            Debug.Log("g press");
-            if(t2d == null)
-                StartCoroutine(GetScreenshot());
-        }
-
         if (Input.GetKeyDown(KeyCode.F)){// click F
+            if(t2d == null)StartCoroutine(GetScreenshot());
             Debug.Log("f press");
             if (t2d != null)
             {
@@ -60,10 +54,10 @@ public class Remplissage : MonoBehaviour
             yield return null;
             if (colorPixelCourant.r < 0.15 && colorPixelCourant.g < 0.15 && colorPixelCourant.b < 0.15)
             {
-                StartCoroutine(RemplissageRegionConnexite(x, y - 1, z)); //Bas
-                StartCoroutine(RemplissageRegionConnexite(x - 1, y, z)); //Gauche
-                StartCoroutine(RemplissageRegionConnexite(x, y + 1, z)); //Haut
-                StartCoroutine(RemplissageRegionConnexite(x + 1, y, z)); //Droite
+                StartCoroutine(RemplissageRegionConnexite(x, y - 10, z)); //Bas
+                StartCoroutine(RemplissageRegionConnexite(x - 10, y, z)); //Gauche
+                StartCoroutine(RemplissageRegionConnexite(x, y + 10, z)); //Haut
+                StartCoroutine(RemplissageRegionConnexite(x + 10, y, z)); //Droite
             }
         }
     }
