@@ -4,6 +4,7 @@ using System.Drawing;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class LineConstrutor : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class LineConstrutor : MonoBehaviour
     
     
     GameObject Sommet;
-    public LineRenderer Line;
+    [FormerlySerializedAs("Line")] public LineRenderer curLine;
     public LineRenderer Line2;
     public LineRenderer Line3;
 
@@ -32,6 +33,8 @@ public class LineConstrutor : MonoBehaviour
     public Spline curSpline = null;
     public LinkedList<Spline> linkedSpline = new LinkedList<Spline>();
     public LinkedList<LineRenderer> linkedLine = new  LinkedList<LineRenderer>();
+    public bool addingPoints = false;
+    public GameObject pointGO;
     
     
     private float nearClipPlaneWorldPoint = 0;
@@ -45,81 +48,153 @@ public class LineConstrutor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && curSpline != null) // click gauche
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (curSpline.pList.Count < 4)
+            if (!addingPoints)
             {
-                Debug.Log("point");
-                Vector3 point = new Vector3();
-
-                Vector2 mousePos = Input.mousePosition;
-
-                point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-                if (nearClipPlaneWorldPoint == 0)
-                    nearClipPlaneWorldPoint = point.z;
-                curSpline.pList.Add(point);
+                addingPoints = true;
+                Debug.Log("Add spline " + linkedSpline.Count);
+                linkedSpline.AddLast(new Spline());
+                curSpline = linkedSpline.Last.Value;
+                linkedLine.AddLast(new GameObject().AddComponent<LineRenderer>());
+                curLine = linkedLine.Last.Value;
+                curLine.startWidth = .5f;
+                curLine.endWidth = .5f;
+                curLine.positionCount = 0;
             }
             else
             {
-                Debug.Log("spline");
-                List<Vector3> bezierPoints = curSpline.Casteljau();
-                foreach (var point in bezierPoints)
-                {
-                    Line.positionCount += 1;
-                    Line.SetPosition(Line.positionCount - 1, point);
-                }
+                Debug.Log("Draw Bezier");
+                drawBezier();
+                addingPoints = false;
             }
         }
 
-        if(Input.GetKeyDown(KeyCode.KeypadPlus) && curSpline != null)
+        if (curSpline == null)
+            return;
+        
+        if (Input.GetMouseButtonDown(0) && addingPoints) // click gauche
         {
-            Line.positionCount = 0;
+            Debug.Log("place point");
+                Vector3 point = new Vector3();
+                Vector2 mousePos = Input.mousePosition;
+
+                point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
+                if (nearClipPlaneWorldPoint == 0)
+                    nearClipPlaneWorldPoint = point.z;
+                curSpline.pList.Add(point);
+                curSpline.pgoList.AddLast(Instantiate(pointGO));
+                curSpline.pgoList.Last.Value.transform.SetPositionAndRotation(point, Quaternion.identity);
+        }
+        else if (Input.GetMouseButton(0)&& !addingPoints)
+        {
+            Vector3 point = new Vector3();
+            Vector2 mousePos = Input.mousePosition;
+            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
+            if (nearClipPlaneWorldPoint == 0)
+                nearClipPlaneWorldPoint = point.z;
+            int index = 0;
+            foreach (GameObject pgo in curSpline.pgoList)
+            {
+                if (Vector3.Distance(point, pgo.transform.position) < 1)
+                {
+                    Debug.Log("move point");
+                    pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
+                    curSpline.pList[index] = point;
+                    List<Vector3> bezierPoints = curSpline.Casteljau();
+                    curLine.positionCount = 0;
+                    foreach (var p in bezierPoints)
+                    {
+                        curLine.positionCount += 1;
+                        curLine.SetPosition(curLine.positionCount - 1, p);
+                    }
+                    break;
+                }
+                index++;
+            }
+        }
+
+        if(Input.GetKeyDown(KeyCode.KeypadPlus))
+        {
             curSpline.step /= 2;
             Debug.Log("spline step : " + curSpline.step);
-            List<Vector3> bezierPoints = curSpline.Casteljau();
-            foreach (var point in bezierPoints)
-            {
-                Line.positionCount += 1;
-                Line.SetPosition(Line.positionCount-1, point);
-            }
+            drawBezier();
         }
-        if(Input.GetKeyDown(KeyCode.KeypadMinus) && curSpline != null)
+        if(Input.GetKeyDown(KeyCode.KeypadMinus))
         {
-            Line.positionCount = 0;
             curSpline.step *= 2;
             Debug.Log("spline step : " + curSpline.step);
-            List<Vector3> bezierPoints = curSpline.Casteljau();
-            foreach (var point in bezierPoints)
-            {
-                Line.positionCount += 1;
-                Line.SetPosition(Line.positionCount-1, point);
-            }
+            drawBezier();
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Backspace))
         {
-            Debug.Log("Add spline " + linkedSpline.Count);
-            linkedSpline.AddLast(new Spline());
+            Debug.Log("Remove spline " + linkedSpline.Count);
+            linkedSpline.Remove(curSpline);
             curSpline = linkedSpline.Last.Value;
-            linkedLine.AddLast(new GameObject().AddComponent<LineRenderer>());
-            Line = linkedLine.Last.Value;
-            Line.startWidth = .01f;
-            Line.endWidth = .01f;
-            Line.positionCount = 0;
+            linkedLine.Remove(curLine);
+            Destroy(curLine.gameObject);
+            curLine = linkedLine.Last.Value;
         }
 
-        if (Input.GetKeyDown(KeyCode.A) && curSpline != null)
+        if (Input.GetKeyDown(KeyCode.A))
         {
             curSpline = linkedSpline.Find(curSpline).Previous.Value;
-            Line = linkedLine.Find(Line).Previous.Value;
+            curLine = linkedLine.Find(curLine).Previous.Value;
             Debug.Log("Previous spline");
         }
         
-        if (Input.GetKeyDown(KeyCode.Z) && curSpline != null)
+        if (Input.GetKeyDown(KeyCode.Z))
         {
             curSpline = linkedSpline.Find(curSpline).Next.Value;
-            Line = linkedLine.Find(Line).Next.Value;
+            curLine = linkedLine.Find(curLine).Next.Value;
             Debug.Log("Next spline");
+        }
+        
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            curSpline.Angle -= 0.1f;
+            Debug.Log(curSpline.Angle);
+            drawBezier();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            curSpline.Angle += 0.1f;
+            Debug.Log(curSpline.Angle);
+            drawBezier();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            curSpline.pointSH.y += 0.1f;
+            drawBezier();
+        }
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            curSpline.pointSH.y -= 0.1f;
+            drawBezier();
+        }
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            curSpline.pointSH.x -= 0.1f;
+            drawBezier();
+        }
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            curSpline.pointSH.x += 0.1f;
+            drawBezier();
+        }
+    }
+
+    void drawBezier()
+    {
+        curLine.positionCount = 0;
+        List<Vector3> bezierPoints = curSpline.Casteljau();
+        foreach (var point in bezierPoints)
+        {
+            curLine.positionCount += 1;
+            curLine.SetPosition(curLine.positionCount - 1, point);
         }
     }
     /*
@@ -309,7 +384,7 @@ public class LineConstrutor : MonoBehaviour
     {
         if (Isfenetre)
         {
-            Line.loop = true;
+            curLine.loop = true;
             win.setNormal();
             tracé = false;
         }
@@ -347,9 +422,9 @@ public class LineConstrutor : MonoBehaviour
     public void Clear()
     {
         
-            Line.positionCount = 0;
+            curLine.positionCount = 0;
             tempcount = 0;
-            Line.loop = false;
+            curLine.loop = false;
         
         
             Line2.positionCount = 0;

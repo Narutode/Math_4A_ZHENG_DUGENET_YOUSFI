@@ -5684,7 +5684,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
+  orthographic: 1
   orthographic size: 12
   m_Depth: -1
   m_CullingMask:
@@ -6553,10 +6553,12 @@ MonoBehaviour:
   "fen\xEAtragePanel": {fileID: 690419541}
   remplissagePanel: {fileID: 1586300525}
   fermerForme: {fileID: 836487620}
-  Line: {fileID: 684703835}
+  curLine: {fileID: 684703835}
   Line2: {fileID: 1936290211}
   Line3: {fileID: 851312988371883501, guid: 65ee5a5d4f8893d418fd6cb1315af886, type: 3}
   cam: {fileID: 1888744961}
+  addingPoints: 0
+  pointGO: {fileID: 3107938435906345459, guid: 3216ac9a68a09114b94b1ad40d7e7b1d, type: 3}
 --- !u!4 &2135731967
 Transform:
   m_ObjectHideFlags: 0
@@ -6584,4 +6586,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe863a500729b4b46a411ed9e4807f05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  t2d: {fileID: 0}
   cam: {fileID: 1888744961}
