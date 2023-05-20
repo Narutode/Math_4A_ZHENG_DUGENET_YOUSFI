@@ -29,39 +29,118 @@ public class LineConstrutor : MonoBehaviour
     private bool isPoly = false;
     private bool tracé = false;
     private bool cyrusBeck = false;
-
+    public Spline curSpline = null;
+    public LinkedList<Spline> linkedSpline = new LinkedList<Spline>();
+    public LinkedList<LineRenderer> linkedLine = new  LinkedList<LineRenderer>();
+    
+    
     private float nearClipPlaneWorldPoint = 0;
     // Start is called before the first frame update
     void Start()
     {
-        win = new Window();
-        poly = new Polygon();
-
+        //win = new Window();
+        //poly = new Polygon();
     }
 
     // Update is called once per frame
     void Update()
     {
-       
-        
-        
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(0) && curSpline != null) // click gauche
         {
-            tracé = false;
-            fenêtragePanel.SetActive(false);
-            remplissagePanel.SetActive(false);
-            
-            if (menuPanel.activeSelf == false)
+            if (curSpline.pList.Count < 4)
             {
-                menuPanel.SetActive(true);
+                Debug.Log("point");
+                Vector3 point = new Vector3();
 
+                Vector2 mousePos = Input.mousePosition;
+
+                point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+                if (nearClipPlaneWorldPoint == 0)
+                    nearClipPlaneWorldPoint = point.z;
+                curSpline.pList.Add(point);
             }
             else
             {
-                menuPanel.SetActive(false);
+                Debug.Log("spline");
+                List<Vector3> bezierPoints = curSpline.Casteljau();
+                foreach (var point in bezierPoints)
+                {
+                    Line.positionCount += 1;
+                    Line.SetPosition(Line.positionCount - 1, point);
+                }
             }
         }
 
+        if(Input.GetKeyDown(KeyCode.KeypadPlus) && curSpline != null)
+        {
+            Line.positionCount = 0;
+            curSpline.step /= 2;
+            Debug.Log("spline step : " + curSpline.step);
+            List<Vector3> bezierPoints = curSpline.Casteljau();
+            foreach (var point in bezierPoints)
+            {
+                Line.positionCount += 1;
+                Line.SetPosition(Line.positionCount-1, point);
+            }
+        }
+        if(Input.GetKeyDown(KeyCode.KeypadMinus) && curSpline != null)
+        {
+            Line.positionCount = 0;
+            curSpline.step *= 2;
+            Debug.Log("spline step : " + curSpline.step);
+            List<Vector3> bezierPoints = curSpline.Casteljau();
+            foreach (var point in bezierPoints)
+            {
+                Line.positionCount += 1;
+                Line.SetPosition(Line.positionCount-1, point);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("Add spline " + linkedSpline.Count);
+            linkedSpline.AddLast(new Spline());
+            curSpline = linkedSpline.Last.Value;
+            linkedLine.AddLast(new GameObject().AddComponent<LineRenderer>());
+            Line = linkedLine.Last.Value;
+            Line.startWidth = .01f;
+            Line.endWidth = .01f;
+            Line.positionCount = 0;
+        }
+
+        if (Input.GetKeyDown(KeyCode.A) && curSpline != null)
+        {
+            curSpline = linkedSpline.Find(curSpline).Previous.Value;
+            Line = linkedLine.Find(Line).Previous.Value;
+            Debug.Log("Previous spline");
+        }
+        
+        if (Input.GetKeyDown(KeyCode.Z) && curSpline != null)
+        {
+            curSpline = linkedSpline.Find(curSpline).Next.Value;
+            Line = linkedLine.Find(Line).Next.Value;
+            Debug.Log("Next spline");
+        }
+    }
+    /*
+    if (Input.GetMouseButtonDown(1))
+    {
+        tracé = false;
+        fenêtragePanel.SetActive(false);
+        remplissagePanel.SetActive(false);
+        
+        if (menuPanel.activeSelf == false)
+        {
+            menuPanel.SetActive(true);
+
+        }
+        else
+        {
+            menuPanel.SetActive(false);
+        }
+    }
+*/
+        /*
         if (tracé)
         {
 
@@ -112,7 +191,7 @@ public class LineConstrutor : MonoBehaviour
                         Sommet.transform.position = new Vector3(x+win.Normals[i].x/3,y+win.Normals[i].y/3,nearClipPlaneWorldPoint);
                         newLine.SetPosition(1, Sommet.transform.position);
                     }
-                    */
+ 
                 }
             }
             else if (isPoly)
@@ -155,8 +234,7 @@ public class LineConstrutor : MonoBehaviour
                     tracé = false;
                 }
             }
-
-            //changer de fenetre window
+//changer de fenetre window
            /* if (Input.GetKeyDown(KeyCode.Z))
             {
                 if (Isfenetre)
@@ -169,8 +247,7 @@ public class LineConstrutor : MonoBehaviour
                 }
             }
             */
-        }
-    //clear polygone
+        //clear polygone
           /*  if (Input.GetKeyDown(KeyCode.C))
             {
                 if (Isfenetre)
@@ -187,11 +264,10 @@ public class LineConstrutor : MonoBehaviour
                 }
             }
             */
+          
 
-        }
 
-   
-    // BOUTONS MENU
+// BOUTONS MENU
     public void Couleurs()
     {
         menuPanel.SetActive(false);
