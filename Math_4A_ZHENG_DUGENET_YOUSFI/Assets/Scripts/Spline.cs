@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -36,7 +37,6 @@ public class Spline
             newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
             //Shearing
             
-            
             pCopy.Add(newP);
             //pCopy.Add(new Vector3(p.x,p.y));
 
@@ -53,5 +53,32 @@ public class Spline
             bezierPoints.Add(pCopy[0]);
         }
         return bezierPoints;
+    }
+
+    public List<Vector3> Jarvis()
+    {
+        List<Vector3> list = new List<Vector3>();
+        Vector3 curPoint = pList.First();
+        foreach (var p in pList)
+        {
+            if (p.x < curPoint.x)
+                curPoint = p;
+        }
+
+        do
+        {
+            list.Add(curPoint);
+            Vector3 bestP = pList.First();
+            foreach (var p in pList)
+            {
+                if (bestP == p || Vector2.Dot(new Vector2(curPoint.x - bestP.x, curPoint.y - bestP.y),
+                    new Vector2(curPoint.x - p.x, curPoint.y - p.y)) < 0)
+                {
+                    bestP = p;
+                }
+            }
+            curPoint = bestP;
+        } while (list.Last() != list.First());
+        return list;
     }
 }

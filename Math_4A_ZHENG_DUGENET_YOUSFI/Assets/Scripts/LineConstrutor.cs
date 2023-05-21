@@ -185,6 +185,21 @@ public class LineConstrutor : MonoBehaviour
             curSpline.pointSH.x += 0.1f;
             drawBezier();
         }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            List<Vector3> jarvis = curSpline.Jarvis();
+            LineRenderer lr = new GameObject().AddComponent<LineRenderer>();
+            lr.startWidth = .5f;
+            lr.endWidth = .5f;
+            lr.positionCount = 0;
+            foreach (var j in jarvis)
+            {
+                lr.positionCount += 1;
+                lr.SetPosition(lr.positionCount-1,j);
+            }
+            lr.loop = true;
+        }
     }
 
     void drawBezier()
