@@ -12,7 +12,7 @@ public class Spline
     public LinkedList<GameObject> pgoList;
     public float Angle = 0;
     public Vector2 pointT = new Vector2(0, 0);
-    public Vector2 pointS = new Vector2(1, 1);
+    public Vector2 pointS = new Vector2(0, 0);
     public Vector2 pointSH = new Vector2(0, 0);
 
     public Spline()
@@ -53,6 +53,60 @@ public class Spline
             bezierPoints.Add(pCopy[0]);
         }
         return bezierPoints;
+    }
+    
+    public List<Vector3> PascalMethod() {
+        List<Vector3> bezierPoints = new List<Vector3>();
+        List<Vector3> pCopy = new List<Vector3>();
+        foreach (var p in pList)
+        {
+            Vector3 newP = new Vector3(p.x, p.y, p.z);
+            //Translation
+            newP.Set(newP.x + pointT.x, newP.y + pointT.y, newP.z);
+            //Rotation
+            newP.Set(newP.x*Mathf.Cos(Angle)-p.y*Mathf.Sin(Angle),
+                newP.x*Mathf.Sin(Angle)+p.y*Mathf.Cos(Angle),p.z);
+            //Scaling
+            newP.Set(newP.x + pointS.x * newP.x, newP.y + pointS.y * newP.y, newP.z);
+            //Shearing
+            newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
+
+            pCopy.Add(newP);
+        }
+        int n = pList.Count()-1;
+        for (float t = 0; t < 1; t += step)
+        {
+            Vector3 res = new Vector3(0,0,  pList.First().z);
+            for (int j = 0; j < pList.Count(); j++)
+            {
+                Vector3 v = pCopy[j] * (chose(n,j)*powI(1-t,n-j)*powI(t,j)); 
+                res.Set(res.x + v.x, res.y + v.y, res.z);
+            }
+            bezierPoints.Add(res);
+        }
+        bezierPoints.Add(pCopy.Last());
+        return bezierPoints;
+    }
+
+    float powI(float a, float b)
+    {
+        if (Math.Abs(b) < 0.00001)
+            return 1;
+        if (Math.Abs(a) < 0.00001)
+            return 0;
+        return Mathf.Pow(a, b);
+    }
+    
+    int chose(int n, int k)
+    {
+        int res = 1;
+        for (int i = 1; i <= k; i++)
+        {
+            res *= n;
+            n--;
+            res /= i;
+        }
+        return res;
     }
 
     public List<Vector3> Jarvis()

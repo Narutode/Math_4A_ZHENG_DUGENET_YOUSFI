@@ -100,7 +100,14 @@ public class LineConstrutor : MonoBehaviour
                 {
                     Debug.Log("move point");
                     pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
+<<<<<<< Updated upstream
                     if (Input.GetKeyDown(KeyCode.KeypadEnter))
+=======
+                    curSpline.pList[index] = point;
+                    List<Vector3> bezierPoints = curSpline.PascalMethod();
+                    curLine.positionCount = 0;
+                    foreach (var p in bezierPoints)
+>>>>>>> Stashed changes
                     {
                         curSpline.pList.Remove(curSpline.pList[index]);
                         curSpline.pgoList.Remove(pgo);
@@ -125,13 +132,13 @@ public class LineConstrutor : MonoBehaviour
             
         }
 
-        if(Input.GetKeyDown(KeyCode.KeypadPlus))
+        if(Input.GetKeyDown(KeyCode.KeypadPlus) || Input.GetKeyDown(KeyCode.I))
         {
             curSpline.step /= 2;
             Debug.Log("spline step : " + curSpline.step);
             drawBezier();
         }
-        if(Input.GetKeyDown(KeyCode.KeypadMinus))
+        if(Input.GetKeyDown(KeyCode.KeypadMinus) || Input.GetKeyDown(KeyCode.U))
         {
             curSpline.step *= 2;
             Debug.Log("spline step : " + curSpline.step);
@@ -221,7 +228,7 @@ public class LineConstrutor : MonoBehaviour
     void drawBezier()
     {
         curLine.positionCount = 0;
-        List<Vector3> bezierPoints = curSpline.Casteljau();
+        List<Vector3> bezierPoints = curSpline.PascalMethod();//curSpline.Casteljau();
         foreach (var point in bezierPoints)
         {
             curLine.positionCount += 1;
