@@ -100,18 +100,29 @@ public class LineConstrutor : MonoBehaviour
                 {
                     Debug.Log("move point");
                     pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
-                    curSpline.pList[index] = point;
-                    List<Vector3> bezierPoints = curSpline.Casteljau();
-                    curLine.positionCount = 0;
-                    foreach (var p in bezierPoints)
+                    if (Input.GetKeyDown(KeyCode.KeypadEnter))
                     {
-                        curLine.positionCount += 1;
-                        curLine.SetPosition(curLine.positionCount - 1, p);
+                        curSpline.pList.Remove(curSpline.pList[index]);
+                        curSpline.pgoList.Remove(pgo);
+                        Destroy(pgo);
                     }
+                    else
+                    {
+                        curSpline.pList[index] = point;
+                        List<Vector3> bezierPoints = curSpline.Casteljau();
+                        curLine.positionCount = 0;
+                        foreach (var p in bezierPoints)
+                        {
+                            curLine.positionCount += 1;
+                            curLine.SetPosition(curLine.positionCount - 1, p);
+                        }
+                    }
+
                     break;
                 }
                 index++;
             }
+            
         }
 
         if(Input.GetKeyDown(KeyCode.KeypadPlus))
@@ -131,10 +142,15 @@ public class LineConstrutor : MonoBehaviour
         {
             Debug.Log("Remove spline " + linkedSpline.Count);
             linkedSpline.Remove(curSpline);
+            foreach (var point in curSpline.pgoList)
+            {
+                Destroy(point);
+            }
             curSpline = linkedSpline.Last.Value;
             linkedLine.Remove(curLine);
             Destroy(curLine.gameObject);
             curLine = linkedLine.Last.Value;
+
         }
 
         if (Input.GetKeyDown(KeyCode.A))
