@@ -98,33 +98,20 @@ public class LineConstrutor : MonoBehaviour
             {
                 if (Vector3.Distance(point, pgo.transform.position) < 1)
                 {
-                    Debug.Log("move point");
-                    pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
-<<<<<<< Updated upstream
-                    if (Input.GetKeyDown(KeyCode.KeypadEnter))
-=======
-                    curSpline.pList[index] = point;
-                    List<Vector3> bezierPoints = curSpline.PascalMethod();
-                    curLine.positionCount = 0;
-                    foreach (var p in bezierPoints)
->>>>>>> Stashed changes
+                    if (Input.GetKeyDown(KeyCode.KeypadEnter)) 
                     {
+                        Debug.Log("delete point");
                         curSpline.pList.Remove(curSpline.pList[index]);
                         curSpline.pgoList.Remove(pgo);
                         Destroy(pgo);
                     }
                     else
                     {
+                        Debug.Log("move point");
+                        pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
                         curSpline.pList[index] = point;
-                        List<Vector3> bezierPoints = curSpline.Casteljau();
-                        curLine.positionCount = 0;
-                        foreach (var p in bezierPoints)
-                        {
-                            curLine.positionCount += 1;
-                            curLine.SetPosition(curLine.positionCount - 1, p);
-                        }
+                        drawBezier();
                     }
-
                     break;
                 }
                 index++;
