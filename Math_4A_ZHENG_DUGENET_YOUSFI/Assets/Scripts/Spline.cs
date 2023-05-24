@@ -8,7 +8,7 @@ using UnityEngine;
 public class Spline
 {
     public float step = 0.1f;
-    public List<Vector3> pList;
+    public LinkedList<Vector3> pList;
     public LinkedList<GameObject> pgoList;
     public float Angle = 0;
     public Vector2 pointT = new Vector2(0, 0);
@@ -17,7 +17,7 @@ public class Spline
 
     public Spline()
     {
-        pList = new List<Vector3>();
+        pList = new LinkedList<Vector3>();
         pgoList = new LinkedList<GameObject>();
     }
 

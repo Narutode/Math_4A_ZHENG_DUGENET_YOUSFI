@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
@@ -55,6 +56,22 @@ public class LineConstrutor : MonoBehaviour
                 addingPoints = true;
                 Debug.Log("Add spline " + linkedSpline.Count);
                 linkedSpline.AddLast(new Spline());
+                if (linkedSpline.Last.Previous != null)
+                {
+                    Spline s1 = linkedSpline.Last.Value;
+                    Spline s0 = linkedSpline.Last.Previous.Value;
+                    //Raccord C0
+                    s1.pList.AddLast(s0.pList.Last());
+                    
+                    //Raccord C1
+                    Vector3 P1 = s1.pList.First.Value + s0.pList.Last.Value - s0.pList.Last.Previous.Value;
+                    s1.pList.AddLast(P1);
+                    
+                    //Raccord C2
+                    Vector3 P2 = s0.pList.Last.Previous.Previous.Value + 2 * (s1.pList.Last.Value - s1.pList.First.Value);
+                    s1.pList.AddLast(P2);
+                    
+                }
                 curSpline = linkedSpline.Last.Value;
                 linkedLine.AddLast(new GameObject().AddComponent<LineRenderer>());
                 curLine = linkedLine.Last.Value;
@@ -82,7 +99,7 @@ public class LineConstrutor : MonoBehaviour
                 point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
                 if (nearClipPlaneWorldPoint == 0)
                     nearClipPlaneWorldPoint = point.z;
-                curSpline.pList.Add(point);
+                curSpline.pList.AddLast(point);
                 curSpline.pgoList.AddLast(Instantiate(pointGO));
                 curSpline.pgoList.Last.Value.transform.SetPositionAndRotation(point, Quaternion.identity);
         }
@@ -101,7 +118,7 @@ public class LineConstrutor : MonoBehaviour
                     if (Input.GetKeyDown(KeyCode.KeypadEnter)) 
                     {
                         Debug.Log("delete point");
-                        curSpline.pList.Remove(curSpline.pList[index]);
+                        //curSpline.pList.Remove(curSpline.pList[index]);
                         curSpline.pgoList.Remove(pgo);
                         Destroy(pgo);
                     }
@@ -109,7 +126,7 @@ public class LineConstrutor : MonoBehaviour
                     {
                         Debug.Log("move point");
                         pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
-                        curSpline.pList[index] = point;
+                        //curSpline.pList[index] = point;
                         drawBezier();
                     }
                     break;
