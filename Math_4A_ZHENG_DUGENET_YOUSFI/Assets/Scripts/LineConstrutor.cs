@@ -80,14 +80,13 @@ public class LineConstrutor : MonoBehaviour
                 curLine.startWidth = .5f;
                 curLine.endWidth = .5f;
                 curLine.positionCount = 0;
-                pointGO.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
+                //pointGO.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
                 //curLine.material = new Material(Shader.Find("Default-Line"));
                 //curLine.material.color = curSpline.color; 
                 //curLine.startColor = curSpline.color;
                 //curLine.endColor = curSpline.color;
-                Material m = new Material(Shader.Find("Specular"));
-                m.color = curSpline.color;
-                curLine.materials.
+                //Material m = new Material(Shader.Find("Specular"));
+                //m.color = curSpline.color;
             }
             else
             {
@@ -163,7 +162,7 @@ public class LineConstrutor : MonoBehaviour
                     //mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
                     Vector2 mousePos = Input.mousePosition;
 
-                    point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+                    point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
 
                     poly.Sommets.Add(new Vector2(point.x, point.y));
 
@@ -514,26 +513,28 @@ public class LineConstrutor : MonoBehaviour
     public void CyrusBeckMenu()
     {
         fenêtragePanel.SetActive(false);
-        for (int i = 0; i < poly.Sommets.Count; i++)
+        List<Vector3> ListSpline = curSpline.Casteljau();
+        for (int i = 0; i < ListSpline.Count; i++)
         {
-            Vector2 ps1 = poly.Sommets[i];
-            Vector2 ps2 = poly.Sommets[(i + 1) % poly.Sommets.Count];
 
+            Vector3 ps1 = ListSpline[i];
+            Vector3 ps2 = ListSpline[(i + 1)%ListSpline.Count];
             if (win.CyrusBeck(ref ps1.x, ref ps1.y, ref ps2.x, ref ps2.y))
             {
                 LineRenderer newLine = Instantiate(Line3);
                 newLine.positionCount += 1;
                 Sommet = new GameObject("Sommet");
-                Sommet.transform.position = new Vector3(ps1.x, ps1.y, nearClipPlaneWorldPoint);
+                Sommet.transform.position = new Vector3(ps1.x, ps1.y, ps1.z);
                 newLine.SetPosition(0, Sommet.transform.position);
 
                 newLine.positionCount += 1;
                 Sommet = new GameObject("Sommet");
-                Sommet.transform.position = new Vector3(ps2.x, ps2.y, nearClipPlaneWorldPoint);
+                Sommet.transform.position = new Vector3(ps2.x, ps2.y, ps2.z);
                 newLine.SetPosition(1, Sommet.transform.position);
 
-                newLine.startWidth = .01f;
-                newLine.endWidth = .01f;
+                newLine.startWidth = .5f;
+                newLine.endWidth = .5f;
+                
             }
         }
     }
