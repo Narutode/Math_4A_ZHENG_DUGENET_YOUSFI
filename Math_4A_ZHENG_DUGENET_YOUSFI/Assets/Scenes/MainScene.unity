@@ -1327,7 +1327,7 @@ RectTransform:
   m_GameObject: {fileID: 410183624}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1841}
-  m_LocalScale: {x: 4.8113313, y: 4.8113313, z: 4.8113313}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1410665733}
@@ -1540,7 +1540,7 @@ RectTransform:
   m_GameObject: {fileID: 489134640}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1840.9999}
-  m_LocalScale: {x: 4.8113313, y: 4.8113313, z: 4.8113313}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 564432155}
@@ -2464,14 +2464,23 @@ LineRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0.0037384033
-        value: 0.24562073
+        time: 0
+        value: 1
         inSlope: 0
         outSlope: 0
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
         outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.47430176
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -2554,7 +2563,7 @@ RectTransform:
   m_GameObject: {fileID: 690419541}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1841}
-  m_LocalScale: {x: 4.8113313, y: 4.8113313, z: 4.8113313}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1946953297}
@@ -2769,7 +2778,7 @@ RectTransform:
   m_GameObject: {fileID: 749972257}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1841}
-  m_LocalScale: {x: 4.8113313, y: 4.8113313, z: 4.8113313}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1496065244}
@@ -5079,7 +5088,7 @@ RectTransform:
   m_GameObject: {fileID: 1586300525}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1841}
-  m_LocalScale: {x: 4.8113313, y: 4.8113313, z: 4.8113313}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1727291985}
@@ -5918,7 +5927,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.2368393
+        value: 1
         inSlope: 0
         outSlope: 0
         tangentMode: 0
