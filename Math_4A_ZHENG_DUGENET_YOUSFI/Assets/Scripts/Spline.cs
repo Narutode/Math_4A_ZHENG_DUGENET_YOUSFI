@@ -4,48 +4,52 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Spline
 {
     public float step = 0.1f;
-    public LinkedList<Vector3> pList;
+    //public LinkedList<Vector3> pList;
     public LinkedList<GameObject> pgoList;
     public float Angle = 0;
     public Vector2 pointT = new Vector2(0, 0);
     public Vector2 pointS = new Vector2(0, 0);
     public Vector2 pointSH = new Vector2(0, 0);
 
+    public Color color;
+    
     public Spline()
     {
-        pList = new LinkedList<Vector3>();
+        //pList = new LinkedList<Vector3>();
         pgoList = new LinkedList<GameObject>();
+        color = Random.ColorHSV();
     }
 
     public List<Vector3> Casteljau()
     {
         List<Vector3> bezierPoints = new List<Vector3>();
         List<Vector3> pCopy = new List<Vector3>();
-        foreach (var p in pList)
+        foreach (GameObject p in pgoList)
         {
-            Vector3 newP = new Vector3(p.x, p.y, p.z);
+            Vector3 point = p.transform.position;
+            Vector3 newP = new Vector3(point.x, point.y, point.z);
             //Translation
             newP.Set(newP.x + pointT.x, newP.y + pointT.y, newP.z);
             //Rotation
-            newP.Set(newP.x*Mathf.Cos(Angle)-p.y*Mathf.Sin(Angle),
-                newP.x*Mathf.Sin(Angle)+p.y*Mathf.Cos(Angle),p.z);
+            newP.Set(newP.x*Mathf.Cos(Angle)-newP.y*Mathf.Sin(Angle),
+                newP.x*Mathf.Sin(Angle)+newP.x*Mathf.Cos(Angle),newP.z);
             //Scaling
             newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
             //Shearing
             
             pCopy.Add(newP);
             //pCopy.Add(new Vector3(p.x,p.y));
-
         }
         for (float t = 0; t <= 1; t += step)
         {
-            for (int j = 0; j < pList.Count; j++)
+            for (int j = 0; j < pgoList.Count; j++)
             {
-                for (int i = 0; i < pList.Count - j - 1; i++)
+                for (int i = 0; i < pgoList.Count - j - 1; i++)
                 {
                     pCopy[i] = (1 - t) * pCopy[i] + t * pCopy[i + 1];
                 }
@@ -58,14 +62,15 @@ public class Spline
     public List<Vector3> PascalMethod() {
         List<Vector3> bezierPoints = new List<Vector3>();
         List<Vector3> pCopy = new List<Vector3>();
-        foreach (var p in pList)
+        foreach (var p in pgoList)
         {
-            Vector3 newP = new Vector3(p.x, p.y, p.z);
+            Vector3 point = p.transform.position;
+            Vector3 newP = new Vector3(point.x, point.y, point.z);
             //Translation
             newP.Set(newP.x + pointT.x, newP.y + pointT.y, newP.z);
             //Rotation
-            newP.Set(newP.x*Mathf.Cos(Angle)-p.y*Mathf.Sin(Angle),
-                newP.x*Mathf.Sin(Angle)+p.y*Mathf.Cos(Angle),p.z);
+            newP.Set(newP.x*Mathf.Cos(Angle)-newP.y*Mathf.Sin(Angle),
+                newP.x*Mathf.Sin(Angle)+newP.y*Mathf.Cos(Angle),newP.z);
             //Scaling
             newP.Set(newP.x + pointS.x * newP.x, newP.y + pointS.y * newP.y, newP.z);
             //Shearing
@@ -73,11 +78,11 @@ public class Spline
 
             pCopy.Add(newP);
         }
-        int n = pList.Count()-1;
+        int n = pgoList.Count()-1;
         for (float t = 0; t < 1; t += step)
         {
-            Vector3 res = new Vector3(0,0,  pList.First().z);
-            for (int j = 0; j < pList.Count(); j++)
+            Vector3 res = new Vector3(0,0,  pgoList.First().transform.position.z);
+            for (int j = 0; j < pgoList.Count(); j++)
             {
                 Vector3 v = pCopy[j] * (chose(n,j)*powI(1-t,n-j)*powI(t,j)); 
                 res.Set(res.x + v.x, res.y + v.y, res.z);
@@ -112,23 +117,23 @@ public class Spline
     public List<Vector3> Jarvis()
     {
         List<Vector3> list = new List<Vector3>();
-        Vector3 curPoint = pList.First();
-        foreach (var p in pList)
+        Vector3 curPoint = pgoList.First().transform.position;
+        foreach (var p in pgoList)
         {
-            if (p.x < curPoint.x)
-                curPoint = p;
+            if (p.transform.position.x < curPoint.x)
+                curPoint = p.transform.position;
         }
 
         do
         {
             list.Add(curPoint);
-            Vector3 bestP = pList.First();
-            foreach (var p in pList)
+            Vector3 bestP = pgoList.First().transform.position;
+            foreach (var p in pgoList)
             {
-                if (bestP == p || Vector2.Dot(new Vector2(curPoint.x - bestP.x, curPoint.y - bestP.y),
-                    new Vector2(curPoint.x - p.x, curPoint.y - p.y)) < 0)
+                if (bestP == p.transform.position || Vector2.Dot(new Vector2(curPoint.x - bestP.x, curPoint.y - bestP.y),
+                    new Vector2(curPoint.x - p.transform.position.x, curPoint.y - p.transform.position.y)) < 0)
                 {
-                    bestP = p;
+                    bestP = p.transform.position;
                 }
             }
             curPoint = bestP;

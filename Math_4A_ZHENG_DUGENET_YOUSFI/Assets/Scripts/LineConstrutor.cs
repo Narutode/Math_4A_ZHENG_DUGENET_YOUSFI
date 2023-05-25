@@ -22,7 +22,7 @@ public class LineConstrutor : MonoBehaviour
     public LineRenderer Line2;
     public LineRenderer Line3;
 
-    private int tempcount ;
+    private int tempcount;
     private int tempcount2;
     public Camera cam;
     public Window win;
@@ -61,17 +61,17 @@ public class LineConstrutor : MonoBehaviour
                     Spline s1 = linkedSpline.Last.Value;
                     Spline s0 = linkedSpline.Last.Previous.Value;
                     //Raccord C0
-                    s1.pList.AddLast(s0.pList.Last());
-
+                    s1.pgoList.AddLast(s0.pgoList.Last());
+                    
                     //Raccord C1
-                    Vector3 P1 = s1.pList.First.Value + s0.pList.Last.Value - s0.pList.Last.Previous.Value;
-                    s1.pList.AddLast(P1);
-
+                    Vector3 P1 = s1.pgoList.First.Value.transform.position + s0.pgoList.Last.Value.transform.position - s0.pgoList.Last.Previous.Value.transform.position;
+                    pointGO.transform.position = P1;
+                    s1.pgoList.AddLast(Instantiate(pointGO));
+                    
                     //Raccord C2
-                    Vector3 P2 = s0.pList.Last.Previous.Previous.Value +
-                                 2 * (s1.pList.Last.Value - s1.pList.First.Value);
-                    s1.pList.AddLast(P2);
-
+                    Vector3 P2 = s0.pgoList.Last.Previous.Previous.Value.transform.position + 2 * (s1.pgoList.Last.Value.transform.position - s1.pgoList.First.Value.transform.position);
+                    pointGO.transform.position = P1;
+                    s1.pgoList.AddLast(Instantiate(pointGO));
                 }
 
                 curSpline = linkedSpline.Last.Value;
@@ -80,6 +80,14 @@ public class LineConstrutor : MonoBehaviour
                 curLine.startWidth = .5f;
                 curLine.endWidth = .5f;
                 curLine.positionCount = 0;
+                pointGO.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
+                //curLine.material = new Material(Shader.Find("Default-Line"));
+                //curLine.material.color = curSpline.color; 
+                //curLine.startColor = curSpline.color;
+                //curLine.endColor = curSpline.color;
+                Material m = new Material(Shader.Find("Specular"));
+                m.color = curSpline.color;
+                curLine.materials.
             }
             else
             {
@@ -240,9 +248,8 @@ public class LineConstrutor : MonoBehaviour
             point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
             if (nearClipPlaneWorldPoint == 0)
                 nearClipPlaneWorldPoint = point.z;
-            curSpline.pList.AddLast(point);
+            pointGO.transform.position = point;
             curSpline.pgoList.AddLast(Instantiate(pointGO));
-            curSpline.pgoList.Last.Value.transform.SetPositionAndRotation(point, Quaternion.identity);
         }
         else if (Input.GetMouseButton(0) && !addingPoints)
         {
@@ -259,7 +266,6 @@ public class LineConstrutor : MonoBehaviour
                     if (Input.GetKeyDown(KeyCode.KeypadEnter))
                     {
                         Debug.Log("delete point");
-                        //curSpline.pList.Remove(curSpline.pList[index]);
                         curSpline.pgoList.Remove(pgo);
                         Destroy(pgo);
                     }
@@ -267,7 +273,6 @@ public class LineConstrutor : MonoBehaviour
                     {
                         Debug.Log("move point");
                         pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
-                        //curSpline.pList[index] = point;
                         drawBezier();
                     }
 
