@@ -87,7 +87,7 @@ public class LineConstrutor : MonoBehaviour
                 //curLine.endColor = curSpline.color;
                 Material m = new Material(Shader.Find("Specular"));
                 m.color = curSpline.color;
-                curLine.materials.
+                curLine.material = m;
             }
             else
             {
