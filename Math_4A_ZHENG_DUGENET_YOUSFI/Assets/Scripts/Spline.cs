@@ -39,8 +39,9 @@ public class Spline
             newP.Set(newP.x*Mathf.Cos(Angle)-newP.y*Mathf.Sin(Angle),
                 newP.x*Mathf.Sin(Angle)+newP.x*Mathf.Cos(Angle),newP.z);
             //Scaling
-            newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
+            newP.Set(newP.x + pointS.x * newP.x, newP.y + pointS.y * newP.y, newP.z);
             //Shearing
+            newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
             
             pCopy.Add(newP);
             //pCopy.Add(new Vector3(p.x,p.y));
@@ -64,19 +65,22 @@ public class Spline
         List<Vector3> pCopy = new List<Vector3>();
         foreach (var p in pgoList)
         {
-            Vector3 point = p.transform.position;
-            Vector3 newP = new Vector3(point.x, point.y, point.z);
-            //Translation
-            newP.Set(newP.x + pointT.x, newP.y + pointT.y, newP.z);
-            //Rotation
-            newP.Set(newP.x*Mathf.Cos(Angle)-newP.y*Mathf.Sin(Angle),
-                newP.x*Mathf.Sin(Angle)+newP.y*Mathf.Cos(Angle),newP.z);
-            //Scaling
-            newP.Set(newP.x + pointS.x * newP.x, newP.y + pointS.y * newP.y, newP.z);
-            //Shearing
-            newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
+            if (p != null)
+            {
+                Vector3 point = p.transform.position;
+                Vector3 newP = new Vector3(point.x, point.y, point.z);
+                //Translation
+                newP.Set(newP.x + pointT.x, newP.y + pointT.y, newP.z);
+                //Rotation
+                newP.Set(newP.x * Mathf.Cos(Angle) - newP.y * Mathf.Sin(Angle),
+                    newP.x * Mathf.Sin(Angle) + newP.y * Mathf.Cos(Angle), newP.z);
+                //Scaling
+                newP.Set(newP.x + pointS.x * newP.x, newP.y + pointS.y * newP.y, newP.z);
+                //Shearing
+                newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
 
-            pCopy.Add(newP);
+                pCopy.Add(newP);
+            }
         }
         int n = pgoList.Count()-1;
         for (float t = 0; t < 1; t += step)

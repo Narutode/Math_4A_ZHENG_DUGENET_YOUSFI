@@ -149,7 +149,7 @@ public class LineConstrutor : MonoBehaviour
 
                 }
             }
-            
+            /*
             else if (isPoly)
             {
                 if (Input.GetMouseButtonDown(2)) // click milieu
@@ -218,8 +218,9 @@ public class LineConstrutor : MonoBehaviour
                     tempcount2 = 0;
                     Line2.loop = false;
                 }
-            }
+            }*/
         }
+        /*
         if (Input.GetMouseButtonDown(1))
         {
             tracé = false;
@@ -235,7 +236,7 @@ public class LineConstrutor : MonoBehaviour
             {
                 menuPanel.SetActive(false);
             }
-        }
+        }*/
         if (curSpline == null)
             return;
 
@@ -249,7 +250,9 @@ public class LineConstrutor : MonoBehaviour
             if (nearClipPlaneWorldPoint == 0)
                 nearClipPlaneWorldPoint = point.z;
             pointGO.transform.position = point;
-            curSpline.pgoList.AddLast(Instantiate(pointGO));
+            GameObject newP = Instantiate(pointGO);
+            newP.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
+            curSpline.pgoList.AddLast(newP);
         }
         else if (Input.GetMouseButton(0) && !addingPoints)
         {
@@ -258,31 +261,37 @@ public class LineConstrutor : MonoBehaviour
             point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
             if (nearClipPlaneWorldPoint == 0)
                 nearClipPlaneWorldPoint = point.z;
-            int index = 0;
             foreach (GameObject pgo in curSpline.pgoList)
             {
                 if (Vector3.Distance(point, pgo.transform.position) < 1)
                 {
-                    if (Input.GetKeyDown(KeyCode.KeypadEnter))
-                    {
-                        Debug.Log("delete point");
-                        curSpline.pgoList.Remove(pgo);
-                        Destroy(pgo);
-                    }
-                    else
-                    {
-                        Debug.Log("move point");
-                        pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
-                        drawBezier();
-                    }
+                    Debug.Log("move point");
+                    pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
+                    drawBezier();
+                    break;
+                }
+            }
+        }
+        else if (Input.GetMouseButton(1) && !addingPoints)
+        {
+            Vector3 point = new Vector3();
+            Vector2 mousePos = Input.mousePosition;
+            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
+            if (nearClipPlaneWorldPoint == 0)
+                nearClipPlaneWorldPoint = point.z;
+            foreach (GameObject pgo in curSpline.pgoList)
+            {
+                if (Vector3.Distance(point, pgo.transform.position) < 1)
+                {
+                    Debug.Log("delete point");
+                    curSpline.pgoList.Remove(pgo);
+                    Destroy(pgo);
 
                     break;
                 }
-
-                index++;
             }
-
         }
+        
 
         if (Input.GetKeyDown(KeyCode.KeypadPlus) || Input.GetKeyDown(KeyCode.I))
         {
@@ -300,32 +309,40 @@ public class LineConstrutor : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Backspace))
         {
-            Debug.Log("Remove spline " + linkedSpline.Count);
-            linkedSpline.Remove(curSpline);
-            foreach (var point in curSpline.pgoList)
+            if (linkedSpline.Count > 1)
             {
-                Destroy(point);
+                Debug.Log("Remove spline " + linkedSpline.Count);
+                linkedSpline.Remove(curSpline);
+                foreach (var point in curSpline.pgoList)
+                {
+                    Destroy(point);
+                }
+
+                curSpline = linkedSpline.Last.Value;
+                linkedLine.Remove(curLine);
+                Destroy(curLine.gameObject);
+                curLine = linkedLine.Last.Value;
             }
-
-            curSpline = linkedSpline.Last.Value;
-            linkedLine.Remove(curLine);
-            Destroy(curLine.gameObject);
-            curLine = linkedLine.Last.Value;
-
         }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
-            curSpline = linkedSpline.Find(curSpline).Previous.Value;
-            curLine = linkedLine.Find(curLine).Previous.Value;
-            Debug.Log("Previous spline");
+            if (linkedSpline.Find(curSpline).Previous != null)
+            {
+                curSpline = linkedSpline.Find(curSpline).Previous.Value;
+                curLine = linkedLine.Find(curLine).Previous.Value;
+                Debug.Log("Previous spline");
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
-            curSpline = linkedSpline.Find(curSpline).Next.Value;
-            curLine = linkedLine.Find(curLine).Next.Value;
-            Debug.Log("Next spline");
+            if (linkedSpline.Find(curSpline).Next != null)
+            {
+                curSpline = linkedSpline.Find(curSpline).Next.Value;
+                curLine = linkedLine.Find(curLine).Next.Value;
+                Debug.Log("Next spline");
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Q))
@@ -344,28 +361,76 @@ public class LineConstrutor : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            curSpline.pointSH.y += 0.1f;
+            curSpline.pointT.y += 0.1f;
             drawBezier();
         }
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            curSpline.pointSH.y -= 0.1f;
+            curSpline.pointT.y -= 0.1f;
             drawBezier();
         }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            curSpline.pointSH.x -= 0.1f;
+            curSpline.pointT.x -= 0.1f;
             drawBezier();
         }
 
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            curSpline.pointSH.x += 0.1f;
+            curSpline.pointT.x += 0.1f;
             drawBezier();
         }
 
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            curSpline.pointS.y += 0.1f;
+            drawBezier();
+        }
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            curSpline.pointS.y -= 0.1f;
+            drawBezier();
+        }
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            curSpline.pointS.x -= 0.1f;
+            drawBezier();
+        }
+
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            curSpline.pointS.x += 0.1f;
+            drawBezier();
+        }
+        
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            curSpline.pointSH.y += 0.1f;
+            drawBezier();
+        }
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            curSpline.pointSH.y -= 0.1f;
+            drawBezier();
+        }
+
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            curSpline.pointSH.x -= 0.1f;
+            drawBezier();
+        }
+
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            curSpline.pointSH.x += 0.1f;
+            drawBezier();
+        }
+        
         if (Input.GetKeyDown(KeyCode.C))
         {
             List<Vector3> jarvis = curSpline.Jarvis();
@@ -381,11 +446,6 @@ public class LineConstrutor : MonoBehaviour
 
             lr.loop = true;
         }
-
-
-
-
-        
     }
 
     void drawBezier()
