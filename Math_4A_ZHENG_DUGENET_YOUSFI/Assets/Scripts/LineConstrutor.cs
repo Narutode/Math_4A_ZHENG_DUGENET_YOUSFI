@@ -37,7 +37,9 @@ public class LineConstrutor : MonoBehaviour
     public LinkedList<LineRenderer> linkedLine = new  LinkedList<LineRenderer>();
     public bool addingPoints = false;
     public GameObject pointGO;
-    
+
+    public int hauteur = 5;
+    public float scale = 1;
     
     private float nearClipPlaneWorldPoint = 0;
     // Start is called before the first frame update
@@ -353,14 +355,14 @@ public class LineConstrutor : MonoBehaviour
                     colors.Add(Color.Lerp(Color.green, Color.red, p.z));
                 }
 
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < hauteur+1; i++)
                 {
                     //creation de la prochaine ligne du mesh
                     for (int n = 0; n < sizeB; n++)
                     {
                         //Debug.Log(n);
                         Vector3 p = bezierPoints[n];
-                        nextBezierPoints.Add(new Vector3(p.x, p.y, p.z - 1));
+                        nextBezierPoints.Add(new Vector3(p.x*scale, p.y*scale, p.z - 1));
                         Vector3 np = nextBezierPoints.Last();
                         colors.Add(Color.Lerp(Color.green, Color.red, np.z/5f));
                     }
@@ -388,12 +390,12 @@ public class LineConstrutor : MonoBehaviour
                 }
                 for (int n = 0; n < sizeB-1; n++)
                 {
-                    tris.Add(5*sizeB+n+1);
-                    tris.Add(5*sizeB+n);
-                    tris.Add(5*sizeB);
+                    tris.Add(hauteur*sizeB+n+1);
+                    tris.Add(hauteur*sizeB+n);
+                    tris.Add(hauteur*sizeB);
                 }
                 
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < hauteur; i++)
                 {
                     for (int n = 0; n < sizeB; n++)
                     { 

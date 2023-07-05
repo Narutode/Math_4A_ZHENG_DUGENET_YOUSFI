@@ -6568,6 +6568,8 @@ MonoBehaviour:
   cam: {fileID: 1888744961}
   addingPoints: 0
   pointGO: {fileID: 3107938435906345459, guid: 3216ac9a68a09114b94b1ad40d7e7b1d, type: 3}
+  hauteur: 30
+  scale: 0.9
 --- !u!4 &2135731967
 Transform:
   m_ObjectHideFlags: 0
