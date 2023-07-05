@@ -6,6 +6,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Color = UnityEngine.Color;
 
 public class LineConstrutor : MonoBehaviour
 {
@@ -327,11 +328,101 @@ public class LineConstrutor : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.A))
         {
+            
+            /*
             if (linkedSpline.Find(curSpline).Previous != null)
             {
                 curSpline = linkedSpline.Find(curSpline).Previous.Value;
                 curLine = linkedLine.Find(curLine).Previous.Value;
                 Debug.Log("Previous spline");
+            }
+            */
+            if (curSpline != null)
+            {
+                List<Vector3> bezierPoints = drawBezier();
+                List<Vector3> nextBezierPoints = new List<Vector3>();
+                List<Vector3> vertices = new List<Vector3>(bezierPoints);
+                List<int> tris = new List<int>();
+                List<Color32> colors = new List<Color32>();
+                int sizeB = bezierPoints.Count;
+                //int sizeTotal = 5 * sizeB;
+
+                for (int n = 0; n < sizeB; n++)
+                {
+                    Vector3 p = bezierPoints[n];
+                    colors.Add(Color.Lerp(Color.green, Color.red, p.z));
+                }
+
+                for (int i = 0; i < 6; i++)
+                {
+                    //creation de la prochaine ligne du mesh
+                    for (int n = 0; n < sizeB; n++)
+                    {
+                        //Debug.Log(n);
+                        Vector3 p = bezierPoints[n];
+                        nextBezierPoints.Add(new Vector3(p.x, p.y, p.z - 1));
+                        Vector3 np = nextBezierPoints.Last();
+                        colors.Add(Color.Lerp(Color.green, Color.red, np.z/5f));
+                    }
+                    vertices.AddRange(nextBezierPoints);
+                    bezierPoints.Clear();
+                    bezierPoints.AddRange(nextBezierPoints);
+                    nextBezierPoints.Clear();
+                }
+
+                /*
+                curLine = new GameObject().AddComponent<LineRenderer>();
+                curLine.startWidth = .5f;
+                curLine.endWidth = .5f;
+                curLine.positionCount = 0;
+                
+                 curLine.positionCount += 1;
+                    point.Set(point.x,point.y,point.z-i);
+                    curLine.SetPosition(curLine.positionCount - 1, point);
+                */
+                for (int n = 0; n < sizeB-1; n++)
+                {
+                    tris.Add(0);
+                    tris.Add(n);
+                    tris.Add(n+1);
+                }
+                for (int n = 0; n < sizeB-1; n++)
+                {
+                    tris.Add(5*sizeB+n+1);
+                    tris.Add(5*sizeB+n);
+                    tris.Add(5*sizeB);
+                }
+                
+                for (int i = 0; i < 5; i++)
+                {
+                    for (int n = 0; n < sizeB; n++)
+                    { 
+                        //Premier triangle
+                       tris.Add(i*sizeB + n);
+                       tris.Add((i+1)*sizeB + n);
+                       tris.Add(i*sizeB + (n+1)%sizeB);
+                       
+                       //Second triangle
+                       tris.Add((i+1)*sizeB + n);
+                       tris.Add((i+1)*sizeB + (n+1)%sizeB);
+                       tris.Add(i*sizeB + (n+1)%sizeB);
+                    }
+                }
+                
+                Mesh mesh = new Mesh();
+                mesh.vertices = vertices.ToArray();
+                mesh.triangles = tris.ToArray();
+                mesh.colors32 = colors.ToArray();
+                mesh.RecalculateNormals();
+                mesh.RecalculateBounds();
+                mesh.RecalculateUVDistributionMetric(0);
+                
+                // Set up game object with mesh;
+                GameObject meshGameObject = new GameObject();
+                MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+                MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
+                filter.mesh = mesh;
+                mr.material = new Material(Shader.Find("Standard"));
             }
         }
 
@@ -448,15 +539,16 @@ public class LineConstrutor : MonoBehaviour
         }
     }
 
-    void drawBezier()
+    List<Vector3> drawBezier()
     {
         curLine.positionCount = 0;
-        List<Vector3> bezierPoints = curSpline.PascalMethod();//curSpline.Casteljau();
+        List<Vector3> bezierPoints = curSpline.Casteljau();//curSpline.PascalMethod();
         foreach (var point in bezierPoints)
         {
             curLine.positionCount += 1;
             curLine.SetPosition(curLine.positionCount - 1, point);
         }
+        return bezierPoints;
     }
 
 

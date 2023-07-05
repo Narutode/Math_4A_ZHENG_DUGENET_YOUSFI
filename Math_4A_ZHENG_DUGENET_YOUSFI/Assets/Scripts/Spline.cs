@@ -29,10 +29,12 @@ public class Spline
     {
         List<Vector3> bezierPoints = new List<Vector3>();
         List<Vector3> pCopy = new List<Vector3>();
+        
         foreach (GameObject p in pgoList)
         {
             Vector3 point = p.transform.position;
             Vector3 newP = new Vector3(point.x, point.y, point.z);
+            /*
             //Translation
             newP.Set(newP.x + pointT.x, newP.y + pointT.y, newP.z);
             //Rotation
@@ -42,10 +44,11 @@ public class Spline
             newP.Set(newP.x + pointS.x * newP.x, newP.y + pointS.y * newP.y, newP.z);
             //Shearing
             newP.Set(newP.x + pointSH.x * newP.y, newP.y + pointSH.y * newP.x, newP.z);
-            
+            */
             pCopy.Add(newP);
             //pCopy.Add(new Vector3(p.x,p.y));
         }
+        
         for (float t = 0; t <= 1; t += step)
         {
             for (int j = 0; j < pgoList.Count; j++)
