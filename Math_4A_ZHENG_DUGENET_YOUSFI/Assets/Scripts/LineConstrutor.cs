@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Color = UnityEngine.Color;
+using UnityEngine.EventSystems;
 
 public class LineConstrutor : MonoBehaviour
 {
@@ -16,7 +17,10 @@ public class LineConstrutor : MonoBehaviour
     public GameObject fenêtragePanel;
     public GameObject remplissagePanel;
     public GameObject fermerForme;
-    
+    public GameObject bézierMenu;
+    public GameObject lissageMenu;
+    public GameObject extrusionsMenu;
+
     
     GameObject Sommet;
     [FormerlySerializedAs("Line")] public LineRenderer curLine;
@@ -55,51 +59,12 @@ public class LineConstrutor : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (!addingPoints)
-            {
-                addingPoints = true;
-                Debug.Log("Add spline " + linkedSpline.Count);
-                linkedSpline.AddLast(new Spline());
-                if (linkedSpline.Last.Previous != null)
-                {
-                    Spline s1 = linkedSpline.Last.Value;
-                    Spline s0 = linkedSpline.Last.Previous.Value;
-                    //Raccord C0
-                    s1.pgoList.AddLast(s0.pgoList.Last());
-                    
-                    //Raccord C1
-                    Vector3 P1 = s1.pgoList.First.Value.transform.position + s0.pgoList.Last.Value.transform.position - s0.pgoList.Last.Previous.Value.transform.position;
-                    pointGO.transform.position = P1;
-                    s1.pgoList.AddLast(Instantiate(pointGO));
-                    
-                    //Raccord C2
-                    Vector3 P2 = s0.pgoList.Last.Previous.Previous.Value.transform.position + 2 * (s1.pgoList.Last.Value.transform.position - s1.pgoList.First.Value.transform.position);
-                    pointGO.transform.position = P1;
-                    s1.pgoList.AddLast(Instantiate(pointGO));
-                }
-
-                curSpline = linkedSpline.Last.Value;
-                linkedLine.AddLast(new GameObject().AddComponent<LineRenderer>());
-                curLine = linkedLine.Last.Value;
-                curLine.startWidth = .5f;
-                curLine.endWidth = .5f;
-                curLine.positionCount = 0;
-                //pointGO.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
-                //curLine.material = new Material(Shader.Find("Default-Line"));
-                //curLine.material.color = curSpline.color; 
-                //curLine.startColor = curSpline.color;
-                //curLine.endColor = curSpline.color;
-                Material m = new Material(Shader.Find("Specular"));
-                m.color = curSpline.color;
-                curLine.material = m;
-            }
-            else
-            {
-                Debug.Log("Draw Bezier");
-                drawBezier();
-                addingPoints = false;
-            }
+           
         }
+
+        
+
+
         if (tracé)
         {
             if (Isfenetre)
@@ -224,7 +189,7 @@ public class LineConstrutor : MonoBehaviour
                 }
             }*/
         }
-        /*
+        
         if (Input.GetMouseButtonDown(1))
         {
             tracé = false;
@@ -240,75 +205,95 @@ public class LineConstrutor : MonoBehaviour
             {
                 menuPanel.SetActive(false);
             }
-        }*/
+        }
         if (curSpline == null)
             return;
 
         if (Input.GetMouseButtonDown(0) && addingPoints) // click gauche
         {
-            Debug.Log("place point");
-            Vector3 point = new Vector3();
-            Vector2 mousePos = Input.mousePosition;
+           
+            if(!EventSystem.current.IsPointerOverGameObject()) 
+            {
+               
+                    Debug.Log("place point");
+                    Vector3 point = new Vector3();
+                    Vector2 mousePos = Input.mousePosition;
 
-            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
-            if (nearClipPlaneWorldPoint == 0)
-                nearClipPlaneWorldPoint = point.z;
-            pointGO.transform.position = point;
-            GameObject newP = Instantiate(pointGO);
-            newP.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
-            curSpline.pgoList.AddLast(newP);
+                    point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
+                    if (nearClipPlaneWorldPoint == 0)
+                        nearClipPlaneWorldPoint = point.z;
+                    pointGO.transform.position = point;
+                    GameObject newP = Instantiate(pointGO);
+                    newP.tag = "Extru";
+                    newP.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
+                    curSpline.pgoList.AddLast(newP);
+                
+            }
+           
         }
         else if (Input.GetMouseButton(0) && !addingPoints)
         {
-            Vector3 point = new Vector3();
-            Vector2 mousePos = Input.mousePosition;
-            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
-            if (nearClipPlaneWorldPoint == 0)
-                nearClipPlaneWorldPoint = point.z;
-            foreach (GameObject pgo in curSpline.pgoList)
+            if (!EventSystem.current.IsPointerOverGameObject())
             {
-                if (Vector3.Distance(point, pgo.transform.position) < 1)
-                {
-                    Debug.Log("move point");
-                    pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
-                    drawBezier();
-                    break;
-                }
+               
+                    Vector3 point = new Vector3();
+                    Vector2 mousePos = Input.mousePosition;
+                    point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
+                    if (nearClipPlaneWorldPoint == 0)
+                        nearClipPlaneWorldPoint = point.z;
+                    foreach (GameObject pgo in curSpline.pgoList)
+                    {
+                        if (Vector3.Distance(point, pgo.transform.position) < 1)
+                        {
+                            Debug.Log("move point");
+                            pgo.transform.SetPositionAndRotation(point, Quaternion.identity);
+                            drawBezier();
+                            break;
+                        }
+                    }
+                
+
             }
+                   
         }
         else if (Input.GetMouseButton(1) && !addingPoints)
         {
-            Vector3 point = new Vector3();
-            Vector2 mousePos = Input.mousePosition;
-            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
-            if (nearClipPlaneWorldPoint == 0)
-                nearClipPlaneWorldPoint = point.z;
-            foreach (GameObject pgo in curSpline.pgoList)
-            {
-                if (Vector3.Distance(point, pgo.transform.position) < 1)
-                {
-                    Debug.Log("delete point");
-                    curSpline.pgoList.Remove(pgo);
-                    Destroy(pgo);
 
-                    break;
-                }
+            if (!EventSystem.current.IsPointerOverGameObject())
+            {
+
+                Vector3 point = new Vector3();
+                    Vector2 mousePos = Input.mousePosition;
+                    point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
+                    if (nearClipPlaneWorldPoint == 0)
+                        nearClipPlaneWorldPoint = point.z;
+                    foreach (GameObject pgo in curSpline.pgoList)
+                    {
+                        if (Vector3.Distance(point, pgo.transform.position) < 1)
+                        {
+                            Debug.Log("delete point");
+                            curSpline.pgoList.Remove(pgo);
+                            Destroy(pgo);
+
+                            break;
+                        }
+                    }
+
+                
+
             }
+           
         }
         
 
         if (Input.GetKeyDown(KeyCode.KeypadPlus) || Input.GetKeyDown(KeyCode.I))
         {
-            curSpline.step /= 2;
-            Debug.Log("spline step : " + curSpline.step);
-            drawBezier();
+            
         }
 
         if (Input.GetKeyDown(KeyCode.KeypadMinus) || Input.GetKeyDown(KeyCode.U))
         {
-            curSpline.step *= 2;
-            Debug.Log("spline step : " + curSpline.step);
-            drawBezier();
+            
         }
 
         if (Input.GetKeyDown(KeyCode.Backspace))
@@ -333,231 +318,17 @@ public class LineConstrutor : MonoBehaviour
         {
             //Rotation
             
-            if (curSpline != null)
-            {
-                List<Vector3> bezierPoints = drawBezier();
-                List<Vector3> nextBezierPoints = new List<Vector3>();
-                List<Vector3> vertices = new List<Vector3>(bezierPoints);
-                List<int> tris = new List<int>();
-                //List<Color32> colors = new List<Color32>();
-                int sizeB = bezierPoints.Count;
-
-                float step = (Mathf.PI * 2) / hauteur;
-                float angle = step;
-                //Axe de rotation
-                Vector3 axis = (bezierPoints.Last() - bezierPoints.First()).normalized;
-                Vector3 milieu = (bezierPoints.Last() + bezierPoints.First()) / 2f;
-
-                for (int i = 0; i < hauteur+1; i++)
-                {
-                    //Matrice de rotation
-                    Vector3 rowX = new Vector3(Mathf.Cos(angle)+axis.x*axis.x*(1-Mathf.Cos(angle)),
-                        axis.x*axis.y*(1-Mathf.Cos(angle))-axis.z*Mathf.Sin(angle),
-                        axis.x*axis.z*(1-Mathf.Cos(angle))+axis.y*Mathf.Sin(angle));
-                
-                    Vector3 rowY = new Vector3(axis.x*axis.y*(1-Mathf.Cos(angle))+axis.z*Mathf.Sin(angle),
-                        Mathf.Cos(angle)+axis.y*axis.y*(1-Mathf.Cos(angle)),
-                        axis.y*axis.z*(1-Mathf.Cos(angle))-axis.x*Mathf.Sin(angle));
-                
-                    Vector3 rowZ = new Vector3(axis.x*axis.z*(1-Mathf.Cos(angle))-axis.y*Mathf.Sin(angle),
-                        axis.z*axis.y*(1-Mathf.Cos(angle))+axis.x*Mathf.Sin(angle),
-                        Mathf.Cos(angle)+axis.z*axis.z*(1-Mathf.Cos(angle)));
-                    //creation de la prochaine ligne du mesh
-                    for (int n = 0; n < sizeB; n++)
-                    {
-                        Vector3 p = bezierPoints[n]-milieu;
-                        Vector3 newP = new Vector3(rowX.x * p.x + rowX.y * p.y + rowX.z * p.z,
-                            rowY.x * p.x + rowY.y * p.y + rowY.z * p.z, rowZ.x * p.x + rowZ.y * p.y + rowZ.z * p.z);
-                        nextBezierPoints.Add(newP+milieu);
-                    }
-
-                    angle += step;
-                    vertices.AddRange(nextBezierPoints);
-                    nextBezierPoints.Clear();
-                }
-                //Triangulation
-                for (int i = 0; i < hauteur; i++)
-                {
-                    for (int n = 0; n < sizeB; n++)
-                    { 
-                        //Premier triangle
-                       tris.Add(i*sizeB + n);
-                       tris.Add((i+1)*sizeB + n);
-                       tris.Add(i*sizeB + (n+1)%sizeB);
-                       
-                       //Second triangle
-                       tris.Add((i+1)*sizeB + n);
-                       tris.Add((i+1)*sizeB + (n+1)%sizeB);
-                       tris.Add(i*sizeB + (n+1)%sizeB);
-                    }
-                }
-                
-                Mesh mesh = new Mesh();
-                mesh.vertices = vertices.ToArray();
-                mesh.triangles = tris.ToArray();
-                //mesh.colors32 = colors.ToArray();
-                mesh.RecalculateNormals();
-                mesh.RecalculateBounds();
-                mesh.RecalculateUVDistributionMetric(0);
-                
-                // Set up game object with mesh;
-                GameObject meshGameObject = new GameObject();
-                MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-                MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
-                filter.mesh = mesh;
-                mr.material = new Material(Shader.Find("Standard"));
-            }
+            
         }
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
-            //Extrusion simple (hauteur + scale)
             
-            if (curSpline != null)
-            {
-                List<Vector3> bezierPoints = drawBezier();
-                List<Vector3> nextBezierPoints = new List<Vector3>();
-                List<Vector3> vertices = new List<Vector3>(bezierPoints);
-                List<int> tris = new List<int>();
-                //List<Color32> colors = new List<Color32>();
-                int sizeB = bezierPoints.Count;
-
-                for (int i = 0; i < hauteur+1; i++)
-                {
-                    //creation de la prochaine ligne du mesh
-                    for (int n = 0; n < sizeB; n++)
-                    {
-                        //Debug.Log(n);
-                        Vector3 p = bezierPoints[n];
-                        nextBezierPoints.Add(new Vector3(p.x*scale, p.y*scale, p.z - 1));
-                        //Vector3 np = nextBezierPoints.Last();
-                        //colors.Add(Color.Lerp(Color.green, Color.red, np.z/5f));
-                    }
-                    vertices.AddRange(nextBezierPoints);
-                    bezierPoints.Clear();
-                    bezierPoints.AddRange(nextBezierPoints);
-                    nextBezierPoints.Clear();
-                }
-                //Triangulation
-                //Face arrière
-                for (int n = 0; n < sizeB-1; n++)
-                {
-                    tris.Add(0);
-                    tris.Add(n);
-                    tris.Add(n+1);
-                }
-                //Face avant
-                for (int n = 0; n < sizeB-1; n++)
-                {
-                    tris.Add(hauteur*sizeB+n+1);
-                    tris.Add(hauteur*sizeB+n);
-                    tris.Add(hauteur*sizeB);
-                }
-                for (int i = 0; i < hauteur; i++)
-                {
-                    for (int n = 0; n < sizeB; n++)
-                    { 
-                        //Premier triangle
-                       tris.Add(i*sizeB + n);
-                       tris.Add((i+1)*sizeB + n);
-                       tris.Add(i*sizeB + (n+1)%sizeB);
-                       
-                       //Second triangle
-                       tris.Add((i+1)*sizeB + n);
-                       tris.Add((i+1)*sizeB + (n+1)%sizeB);
-                       tris.Add(i*sizeB + (n+1)%sizeB);
-                    }
-                }
-                
-                Mesh mesh = new Mesh();
-                mesh.vertices = vertices.ToArray();
-                mesh.triangles = tris.ToArray();
-                //mesh.colors32 = colors.ToArray();
-                mesh.RecalculateNormals();
-                mesh.RecalculateBounds();
-                mesh.RecalculateUVDistributionMetric(0);
-                
-                // Set up game object with mesh;
-                GameObject meshGameObject = new GameObject();
-                MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-                MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
-                filter.mesh = mesh;
-                mr.material = new Material(Shader.Find("Standard"));
-            }
         }
         
         if (Input.GetKeyDown(KeyCode.E))
         {
-            //Extrusion avec trajectoire
             
-            if (curSpline != null)
-            {
-                List<Vector3> bezierPoints = drawBezier();
-                List<Vector3> nextBezierPoints = new List<Vector3>();
-                List<Vector3> vertices = new List<Vector3>(bezierPoints);
-                List<int> tris = new List<int>();
-                //List<Color32> colors = new List<Color32>();
-                int sizeB = bezierPoints.Count;
-
-                for (int i = 0; i < trajectoire.positionCount; i++)
-                {
-                    Vector3 posTrajectoire = trajectoire.GetPosition(i);
-                    //creation de la prochaine ligne du mesh
-                    for (int n = 0; n < sizeB; n++)
-                    {
-                        //Debug.Log(n);
-                        Vector3 p = bezierPoints[n]+posTrajectoire;
-                        nextBezierPoints.Add(new Vector3(p.x, p.y, p.z));
-                    }
-                    vertices.AddRange(nextBezierPoints);
-                    nextBezierPoints.Clear();
-                }
-                //Triangulation
-                //Face arrière
-                for (int n = 0; n < sizeB-1; n++)
-                {
-                    tris.Add(0);
-                    tris.Add(n);
-                    tris.Add(n+1);
-                }
-                //Face avant
-                for (int n = 0; n < sizeB-1; n++)
-                {
-                    tris.Add(trajectoire.positionCount*sizeB+n+1);
-                    tris.Add(trajectoire.positionCount*sizeB+n);
-                    tris.Add(trajectoire.positionCount*sizeB);
-                }
-                for (int i = 0; i < trajectoire.positionCount; i++)
-                {
-                    for (int n = 0; n < sizeB; n++)
-                    { 
-                        //Premier triangle
-                       tris.Add(i*sizeB + n);
-                       tris.Add((i+1)*sizeB + n);
-                       tris.Add(i*sizeB + (n+1)%sizeB);
-                       
-                       //Second triangle
-                       tris.Add((i+1)*sizeB + n);
-                       tris.Add((i+1)*sizeB + (n+1)%sizeB);
-                       tris.Add(i*sizeB + (n+1)%sizeB);
-                    }
-                }
-                
-                Mesh mesh = new Mesh();
-                mesh.vertices = vertices.ToArray();
-                mesh.triangles = tris.ToArray();
-                //mesh.colors32 = colors.ToArray();
-                mesh.RecalculateNormals();
-                mesh.RecalculateBounds();
-                mesh.RecalculateUVDistributionMetric(0);
-                
-                // Set up game object with mesh;
-                GameObject meshGameObject = new GameObject();
-                MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-                MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
-                filter.mesh = mesh;
-                mr.material = new Material(Shader.Find("Standard"));
-            }
         }
 
         if (Input.GetKeyDown(KeyCode.Q))
@@ -677,6 +448,14 @@ public class LineConstrutor : MonoBehaviour
 
 
 // BOUTONS MENU
+
+    public void Beziers()
+    {
+        menuPanel.SetActive(false);
+        bézierMenu.SetActive(true);
+    }
+
+
     public void Couleurs()
     {
         menuPanel.SetActive(false);
@@ -755,7 +534,15 @@ public class LineConstrutor : MonoBehaviour
 
     public void Clear()
     {
-        
+        GameObject[] extrus = GameObject.FindGameObjectsWithTag("Extru");
+        foreach(GameObject obj in extrus)
+        {
+            Destroy(obj);
+        }
+        if(curSpline != null) curSpline.pgoList.Clear();
+
+        linkedLine.Clear();
+        linkedSpline.Clear();
             curLine.positionCount = 0;
             tempcount = 0;
             curLine.loop = false;
@@ -768,7 +555,7 @@ public class LineConstrutor : MonoBehaviour
         
     }
 
-    
+   
     public void RetourTrace()
     {
         tracerMenu.SetActive(false);
@@ -836,6 +623,362 @@ public class LineConstrutor : MonoBehaviour
         newLine.loop = true;
     }
     
+
+    public void CommencerBéziers()
+    {
+        bézierMenu.transform.GetChild(0).gameObject.SetActive(false);
+        bézierMenu.transform.GetChild(1).gameObject.SetActive(true);
+        bézierMenu.transform.GetChild(2).gameObject.SetActive(false);
+        bézierMenu.transform.GetChild(3).gameObject.SetActive(false);
+
+        addingPoints = true;
+
+            Debug.Log("Add spline " + linkedSpline.Count);
+            linkedSpline.AddLast(new Spline());
+            if (linkedSpline.Last.Previous != null)
+            {
+                Spline s1 = linkedSpline.Last.Value;
+                Spline s0 = linkedSpline.Last.Previous.Value;
+                //Raccord C0
+                s1.pgoList.AddLast(s0.pgoList.Last());
+
+                //Raccord C1
+                Vector3 P1 = s1.pgoList.First.Value.transform.position + s0.pgoList.Last.Value.transform.position - s0.pgoList.Last.Previous.Value.transform.position;
+                pointGO.transform.position = P1;
+                s1.pgoList.AddLast(Instantiate(pointGO));
+
+                //Raccord C2
+                Vector3 P2 = s0.pgoList.Last.Previous.Previous.Value.transform.position + 2 * (s1.pgoList.Last.Value.transform.position - s1.pgoList.First.Value.transform.position);
+                pointGO.transform.position = P1;
+                s1.pgoList.AddLast(Instantiate(pointGO));
+            }
+
+
+
+            curSpline = linkedSpline.Last.Value;
+            GameObject lr = new GameObject();
+            lr.tag = "Extru";
+            linkedLine.AddLast(lr.AddComponent<LineRenderer>());
+            curLine = linkedLine.Last.Value;
+            curLine.startWidth = .5f;
+            curLine.endWidth = .5f;
+            curLine.positionCount = 0;
+            //pointGO.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
+            //curLine.material = new Material(Shader.Find("Default-Line"));
+            //curLine.material.color = curSpline.color; 
+            //curLine.startColor = curSpline.color;
+            //curLine.endColor = curSpline.color;
+            Material m = new Material(Shader.Find("Specular"));
+            m.color = curSpline.color;
+            curLine.material = m;
+        
+    }
+
+    public void TerminerBéziers()
+    {
+       
+
+        if (curSpline.pgoList.Count > 1)
+        {
+            bézierMenu.transform.GetChild(0).gameObject.SetActive(false);
+            bézierMenu.transform.GetChild(1).gameObject.SetActive(false);
+            bézierMenu.transform.GetChild(2).gameObject.SetActive(true);
+            bézierMenu.transform.GetChild(3).gameObject.SetActive(true);
+            Debug.Log("Draw Bezier");
+            drawBezier();
+            addingPoints = false;
+        }
+        else
+        {
+            Debug.Log("At least 2 points needed !");
+        }
+    }
+
+    public void Lissage()
+    {
+        bézierMenu.SetActive(false);
+        lissageMenu.SetActive(true);
+    }
+
+    public void Extrusions()
+    {
+        bézierMenu.SetActive(false);
+        extrusionsMenu.SetActive(true);
+    }
+
+    public void RetourBéziers()
+    {
+        addingPoints = false;
+        Clear();
+        
+        bézierMenu.transform.GetChild(0).gameObject.SetActive(true);
+        bézierMenu.transform.GetChild(1).gameObject.SetActive(false);
+        bézierMenu.transform.GetChild(2).gameObject.SetActive(false);
+        bézierMenu.transform.GetChild(3).gameObject.SetActive(false);
+        bézierMenu.SetActive(false);
+        menuPanel.SetActive(true);
+        
+    }
+
+    public void RetourLissage()
+    {
+        lissageMenu.SetActive(false);
+        bézierMenu.SetActive(true);
+    }
+    public void LissagePlus()
+    {
+        curSpline.step /= 2;
+        Debug.Log("spline step : " + curSpline.step);
+        drawBezier();
+    }
+
+    public void LissageMoins()
+    {
+        curSpline.step *= 2;
+        Debug.Log("spline step : " + curSpline.step);
+        drawBezier();
+    }
+
+    public void RetourExtrusions()
+    {
+        extrusionsMenu.SetActive(false);
+        bézierMenu.SetActive(true);
+    }
+
+    public void RotExtru()
+    {
+        if (curSpline != null)
+        {
+            List<Vector3> bezierPoints = drawBezier();
+            List<Vector3> nextBezierPoints = new List<Vector3>();
+            List<Vector3> vertices = new List<Vector3>(bezierPoints);
+            List<int> tris = new List<int>();
+            //List<Color32> colors = new List<Color32>();
+            int sizeB = bezierPoints.Count;
+
+            float step = (Mathf.PI * 2) / hauteur;
+            float angle = step;
+            //Axe de rotation
+            Vector3 axis = (bezierPoints.Last() - bezierPoints.First()).normalized;
+            Vector3 milieu = (bezierPoints.Last() + bezierPoints.First()) / 2f;
+
+            for (int i = 0; i < hauteur + 1; i++)
+            {
+                //Matrice de rotation
+                Vector3 rowX = new Vector3(Mathf.Cos(angle) + axis.x * axis.x * (1 - Mathf.Cos(angle)),
+                    axis.x * axis.y * (1 - Mathf.Cos(angle)) - axis.z * Mathf.Sin(angle),
+                    axis.x * axis.z * (1 - Mathf.Cos(angle)) + axis.y * Mathf.Sin(angle));
+
+                Vector3 rowY = new Vector3(axis.x * axis.y * (1 - Mathf.Cos(angle)) + axis.z * Mathf.Sin(angle),
+                    Mathf.Cos(angle) + axis.y * axis.y * (1 - Mathf.Cos(angle)),
+                    axis.y * axis.z * (1 - Mathf.Cos(angle)) - axis.x * Mathf.Sin(angle));
+
+                Vector3 rowZ = new Vector3(axis.x * axis.z * (1 - Mathf.Cos(angle)) - axis.y * Mathf.Sin(angle),
+                    axis.z * axis.y * (1 - Mathf.Cos(angle)) + axis.x * Mathf.Sin(angle),
+                    Mathf.Cos(angle) + axis.z * axis.z * (1 - Mathf.Cos(angle)));
+                //creation de la prochaine ligne du mesh
+                for (int n = 0; n < sizeB; n++)
+                {
+                    Vector3 p = bezierPoints[n] - milieu;
+                    Vector3 newP = new Vector3(rowX.x * p.x + rowX.y * p.y + rowX.z * p.z,
+                        rowY.x * p.x + rowY.y * p.y + rowY.z * p.z, rowZ.x * p.x + rowZ.y * p.y + rowZ.z * p.z);
+                    nextBezierPoints.Add(newP + milieu);
+                }
+
+                angle += step;
+                vertices.AddRange(nextBezierPoints);
+                nextBezierPoints.Clear();
+            }
+            //Triangulation
+            for (int i = 0; i < hauteur; i++)
+            {
+                for (int n = 0; n < sizeB; n++)
+                {
+                    //Premier triangle
+                    tris.Add(i * sizeB + n);
+                    tris.Add((i + 1) * sizeB + n);
+                    tris.Add(i * sizeB + (n + 1) % sizeB);
+
+                    //Second triangle
+                    tris.Add((i + 1) * sizeB + n);
+                    tris.Add((i + 1) * sizeB + (n + 1) % sizeB);
+                    tris.Add(i * sizeB + (n + 1) % sizeB);
+                }
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = tris.ToArray();
+            //mesh.colors32 = colors.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.RecalculateUVDistributionMetric(0);
+
+            // Set up game object with mesh;
+            GameObject meshGameObject = new GameObject();
+            meshGameObject.tag = "Extru";
+            MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+            MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
+            filter.mesh = mesh;
+            mr.material = new Material(Shader.Find("Standard"));
+        }
+    }
+
+    public void SimpleExtru()
+    {
+        //Extrusion simple (hauteur + scale)
+
+        if (curSpline != null)
+        {
+            List<Vector3> bezierPoints = drawBezier();
+            List<Vector3> nextBezierPoints = new List<Vector3>();
+            List<Vector3> vertices = new List<Vector3>(bezierPoints);
+            List<int> tris = new List<int>();
+            //List<Color32> colors = new List<Color32>();
+            int sizeB = bezierPoints.Count;
+
+            for (int i = 0; i < hauteur + 1; i++)
+            {
+                //creation de la prochaine ligne du mesh
+                for (int n = 0; n < sizeB; n++)
+                {
+                    //Debug.Log(n);
+                    Vector3 p = bezierPoints[n];
+                    nextBezierPoints.Add(new Vector3(p.x * scale, p.y * scale, p.z - 1));
+                    //Vector3 np = nextBezierPoints.Last();
+                    //colors.Add(Color.Lerp(Color.green, Color.red, np.z/5f));
+                }
+                vertices.AddRange(nextBezierPoints);
+                bezierPoints.Clear();
+                bezierPoints.AddRange(nextBezierPoints);
+                nextBezierPoints.Clear();
+            }
+            //Triangulation
+            //Face arrière
+            for (int n = 0; n < sizeB - 1; n++)
+            {
+                tris.Add(0);
+                tris.Add(n);
+                tris.Add(n + 1);
+            }
+            //Face avant
+            for (int n = 0; n < sizeB - 1; n++)
+            {
+                tris.Add(hauteur * sizeB + n + 1);
+                tris.Add(hauteur * sizeB + n);
+                tris.Add(hauteur * sizeB);
+            }
+            for (int i = 0; i < hauteur; i++)
+            {
+                for (int n = 0; n < sizeB; n++)
+                {
+                    //Premier triangle
+                    tris.Add(i * sizeB + n);
+                    tris.Add((i + 1) * sizeB + n);
+                    tris.Add(i * sizeB + (n + 1) % sizeB);
+
+                    //Second triangle
+                    tris.Add((i + 1) * sizeB + n);
+                    tris.Add((i + 1) * sizeB + (n + 1) % sizeB);
+                    tris.Add(i * sizeB + (n + 1) % sizeB);
+                }
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = tris.ToArray();
+            //mesh.colors32 = colors.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.RecalculateUVDistributionMetric(0);
+
+            // Set up game object with mesh;
+            GameObject meshGameObject = new GameObject();
+            meshGameObject.tag = "Extru";
+            MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+            MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
+            filter.mesh = mesh;
+            mr.material = new Material(Shader.Find("Standard"));
+        }
+    }
+
+    public void TrajExtru()
+    {
+        //Extrusion avec trajectoire
+
+        if (curSpline != null)
+        {
+            List<Vector3> bezierPoints = drawBezier();
+            List<Vector3> nextBezierPoints = new List<Vector3>();
+            List<Vector3> vertices = new List<Vector3>(bezierPoints);
+            List<int> tris = new List<int>();
+            //List<Color32> colors = new List<Color32>();
+            int sizeB = bezierPoints.Count;
+
+            for (int i = 0; i < trajectoire.positionCount; i++)
+            {
+                Vector3 posTrajectoire = trajectoire.GetPosition(i);
+                //creation de la prochaine ligne du mesh
+                for (int n = 0; n < sizeB; n++)
+                {
+                    //Debug.Log(n);
+                    Vector3 p = bezierPoints[n] + posTrajectoire;
+                    nextBezierPoints.Add(new Vector3(p.x, p.y, p.z));
+                }
+                vertices.AddRange(nextBezierPoints);
+                nextBezierPoints.Clear();
+            }
+            //Triangulation
+            //Face arrière
+            for (int n = 0; n < sizeB - 1; n++)
+            {
+                tris.Add(0);
+                tris.Add(n);
+                tris.Add(n + 1);
+            }
+            //Face avant
+            for (int n = 0; n < sizeB - 1; n++)
+            {
+                tris.Add(trajectoire.positionCount * sizeB + n + 1);
+                tris.Add(trajectoire.positionCount * sizeB + n);
+                tris.Add(trajectoire.positionCount * sizeB);
+            }
+            for (int i = 0; i < trajectoire.positionCount; i++)
+            {
+                for (int n = 0; n < sizeB; n++)
+                {
+                    //Premier triangle
+                    tris.Add(i * sizeB + n);
+                    tris.Add((i + 1) * sizeB + n);
+                    tris.Add(i * sizeB + (n + 1) % sizeB);
+
+                    //Second triangle
+                    tris.Add((i + 1) * sizeB + n);
+                    tris.Add((i + 1) * sizeB + (n + 1) % sizeB);
+                    tris.Add(i * sizeB + (n + 1) % sizeB);
+                }
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = tris.ToArray();
+            //mesh.colors32 = colors.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.RecalculateUVDistributionMetric(0);
+
+            // Set up game object with mesh;
+            GameObject meshGameObject = new GameObject();
+            meshGameObject.tag = "Extru";
+            MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+            MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
+            filter.mesh = mesh;
+            mr.material = new Material(Shader.Find("Standard"));
+        }
+    }
+
+
+
 
     public void DécoupageQuelconque()
     {
