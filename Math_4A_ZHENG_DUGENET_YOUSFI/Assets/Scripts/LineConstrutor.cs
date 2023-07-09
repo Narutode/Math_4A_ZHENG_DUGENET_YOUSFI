@@ -451,7 +451,8 @@ public class LineConstrutor : MonoBehaviour
 
     public void Beziers()
     {
-        menuPanel.SetActive(false);
+        //menuPanel.SetActive(false);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(false);
         bézierMenu.SetActive(true);
     }
 
@@ -543,10 +544,12 @@ public class LineConstrutor : MonoBehaviour
 
         linkedLine.Clear();
         linkedSpline.Clear();
+        if (curLine != null)
+        {
             curLine.positionCount = 0;
             tempcount = 0;
             curLine.loop = false;
-        
+        }
         
             Line2.positionCount = 0;
             tempcount2 = 0;
@@ -716,7 +719,8 @@ public class LineConstrutor : MonoBehaviour
         bézierMenu.transform.GetChild(2).gameObject.SetActive(false);
         bézierMenu.transform.GetChild(3).gameObject.SetActive(false);
         bézierMenu.SetActive(false);
-        menuPanel.SetActive(true);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
+        //menuPanel.SetActive(true);
         
     }
 
@@ -743,6 +747,29 @@ public class LineConstrutor : MonoBehaviour
     {
         extrusionsMenu.SetActive(false);
         bézierMenu.SetActive(true);
+    }
+    public void OnClickExtru()
+    {
+        extrusionsMenu.transform.GetChild(0).gameObject.SetActive(false);
+        extrusionsMenu.transform.GetChild(1).gameObject.SetActive(false);
+        extrusionsMenu.transform.GetChild(2).gameObject.SetActive(false);
+        extrusionsMenu.transform.GetChild(3).gameObject.SetActive(false);
+        extrusionsMenu.transform.GetChild(4).gameObject.SetActive(true);
+    }
+
+    public void ClearExtru()
+    {
+        extrusionsMenu.transform.GetChild(0).gameObject.SetActive(true);
+        extrusionsMenu.transform.GetChild(1).gameObject.SetActive(true);
+        extrusionsMenu.transform.GetChild(2).gameObject.SetActive(true);
+        extrusionsMenu.transform.GetChild(3).gameObject.SetActive(true);
+        extrusionsMenu.transform.GetChild(4).gameObject.SetActive(false);
+
+        extrusionsMenu.SetActive(false);
+
+        Clear();
+
+        RetourBéziers();
     }
 
     public void RotExtru()
@@ -822,6 +849,7 @@ public class LineConstrutor : MonoBehaviour
             filter.mesh = mesh;
             mr.material = new Material(Shader.Find("Standard"));
         }
+        OnClickExtru();
     }
 
     public void SimpleExtru()
@@ -900,6 +928,7 @@ public class LineConstrutor : MonoBehaviour
             filter.mesh = mesh;
             mr.material = new Material(Shader.Find("Standard"));
         }
+        OnClickExtru();
     }
 
     public void TrajExtru()
@@ -975,6 +1004,7 @@ public class LineConstrutor : MonoBehaviour
             filter.mesh = mesh;
             mr.material = new Material(Shader.Find("Standard"));
         }
+        OnClickExtru();
     }
 
 
