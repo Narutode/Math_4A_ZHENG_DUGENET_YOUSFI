@@ -115,7 +115,6 @@ public class LineConstrutor : MonoBehaviour
                             nearClipPlaneWorldPoint);
                         newLine.SetPosition(1, Sommet.transform.position);
                     }
-
                 }
             }
             /*
@@ -225,7 +224,7 @@ public class LineConstrutor : MonoBehaviour
                     pointGO.transform.position = point;
                     GameObject newP = Instantiate(pointGO);
                     newP.tag = "Extru";
-                    newP.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
+                    //newP.GetComponent<MeshRenderer>().sharedMaterial.color = curSpline.color;
                     curSpline.pgoList.AddLast(newP);
                 
             }
@@ -316,7 +315,6 @@ public class LineConstrutor : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.A))
         {
-            //Rotation
             
             
         }
@@ -661,8 +659,6 @@ public class LineConstrutor : MonoBehaviour
                 s1.pgoList.AddLast(Instantiate(pointGO));
             }
 
-
-
             curSpline = linkedSpline.Last.Value;
             GameObject lr = new GameObject();
             lr.tag = "Extru";
@@ -676,16 +672,14 @@ public class LineConstrutor : MonoBehaviour
             //curLine.material.color = curSpline.color; 
             //curLine.startColor = curSpline.color;
             //curLine.endColor = curSpline.color;
-            Material m = new Material(Shader.Find("Specular"));
-            m.color = curSpline.color;
-            curLine.material = m;
+            //Material m = new Material(Shader.Find("Specular"));
+            //m.color = curSpline.color;
+            //curLine.material = m;
         
     }
 
     public void TerminerBéziers()
     {
-       
-
         if (curSpline.pgoList.Count > 1)
         {
             bézierMenu.transform.GetChild(0).gameObject.SetActive(false);
@@ -785,6 +779,8 @@ public class LineConstrutor : MonoBehaviour
 
     public void RotExtru()
     {
+        //Rotation
+
         if (curSpline != null)
         {
             List<Vector3> bezierPoints = drawBezier();
@@ -954,16 +950,43 @@ public class LineConstrutor : MonoBehaviour
             List<int> tris = new List<int>();
             //List<Color32> colors = new List<Color32>();
             int sizeB = bezierPoints.Count;
+            
+            Vector3 normalBezier = new Vector3(0, 0, -1);
+            Vector3 milieu = new Vector3(0, 0, 1.3f);
 
-            for (int i = 0; i < trajectoire.positionCount; i++)
+            hauteur = trajectoire.positionCount-1;
+            
+            for (int i = 1; i < hauteur+1; i++)
             {
+                Vector3 prevTrajectoire = trajectoire.GetPosition(i-1);
                 Vector3 posTrajectoire = trajectoire.GetPosition(i);
+
+                //Vector3 axis = new Vector3(0,-1,0);
+                Vector3 axis = Vector3.Cross(normalBezier, posTrajectoire-prevTrajectoire).normalized;
+                float angle = Mathf.Deg2Rad*Vector3.Angle(posTrajectoire-prevTrajectoire,normalBezier);
+                //float angle = 0;
+                
+                //Matrice de rotation
+                Vector3 rowX = new Vector3(Mathf.Cos(angle) + axis.x * axis.x * (1 - Mathf.Cos(angle)),
+                    axis.x * axis.y * (1 - Mathf.Cos(angle)) - axis.z * Mathf.Sin(angle),
+                    axis.x * axis.z * (1 - Mathf.Cos(angle)) + axis.y * Mathf.Sin(angle));
+
+                Vector3 rowY = new Vector3(axis.x * axis.y * (1 - Mathf.Cos(angle)) + axis.z * Mathf.Sin(angle),
+                    Mathf.Cos(angle) + axis.y * axis.y * (1 - Mathf.Cos(angle)),
+                    axis.y * axis.z * (1 - Mathf.Cos(angle)) - axis.x * Mathf.Sin(angle));
+
+                Vector3 rowZ = new Vector3(axis.x * axis.z * (1 - Mathf.Cos(angle)) - axis.y * Mathf.Sin(angle),
+                    axis.z * axis.y * (1 - Mathf.Cos(angle)) + axis.x * Mathf.Sin(angle),
+                    Mathf.Cos(angle) + axis.z * axis.z * (1 - Mathf.Cos(angle)));
+                
                 //creation de la prochaine ligne du mesh
                 for (int n = 0; n < sizeB; n++)
                 {
                     //Debug.Log(n);
-                    Vector3 p = bezierPoints[n] + posTrajectoire;
-                    nextBezierPoints.Add(new Vector3(p.x, p.y, p.z));
+                    Vector3 p = bezierPoints[n] - milieu;
+                    Vector3 newP = new Vector3(rowX.x * p.x + rowX.y * p.y + rowX.z * p.z,
+                        rowY.x * p.x + rowY.y * p.y + rowY.z * p.z, rowZ.x * p.x + rowZ.y * p.y + rowZ.z * p.z);
+                    nextBezierPoints.Add(newP + posTrajectoire + milieu);
                 }
                 vertices.AddRange(nextBezierPoints);
                 nextBezierPoints.Clear();
@@ -979,11 +1002,11 @@ public class LineConstrutor : MonoBehaviour
             //Face avant
             for (int n = 0; n < sizeB - 1; n++)
             {
-                tris.Add(trajectoire.positionCount * sizeB + n + 1);
-                tris.Add(trajectoire.positionCount * sizeB + n);
-                tris.Add(trajectoire.positionCount * sizeB);
+                tris.Add(hauteur * sizeB + n + 1);
+                tris.Add(hauteur * sizeB + n);
+                tris.Add(hauteur * sizeB);
             }
-            for (int i = 0; i < trajectoire.positionCount; i++)
+            for (int i = 0; i < hauteur; i++)
             {
                 for (int n = 0; n < sizeB; n++)
                 {
