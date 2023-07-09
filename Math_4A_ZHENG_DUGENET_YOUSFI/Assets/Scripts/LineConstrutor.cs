@@ -452,7 +452,12 @@ public class LineConstrutor : MonoBehaviour
     public void Beziers()
     {
         //menuPanel.SetActive(false);
+        Clear();
         menuPanel.transform.GetChild(3).gameObject.SetActive(false);
+        bézierMenu.transform.GetChild(0).gameObject.SetActive(true);
+        bézierMenu.transform.GetChild(1).gameObject.SetActive(false);
+        bézierMenu.transform.GetChild(2).gameObject.SetActive(false);
+        bézierMenu.transform.GetChild(3).gameObject.SetActive(false);
         bézierMenu.SetActive(true);
     }
 
@@ -750,11 +755,17 @@ public class LineConstrutor : MonoBehaviour
     }
     public void OnClickExtru()
     {
-        extrusionsMenu.transform.GetChild(0).gameObject.SetActive(false);
+        /*extrusionsMenu.transform.GetChild(0).gameObject.SetActive(false);
         extrusionsMenu.transform.GetChild(1).gameObject.SetActive(false);
         extrusionsMenu.transform.GetChild(2).gameObject.SetActive(false);
         extrusionsMenu.transform.GetChild(3).gameObject.SetActive(false);
         extrusionsMenu.transform.GetChild(4).gameObject.SetActive(true);
+        */
+       
+
+        extrusionsMenu.SetActive(false);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
+        menuPanel.SetActive(false);
     }
 
     public void ClearExtru()
