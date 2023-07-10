@@ -20,7 +20,12 @@ public class LineConstrutor : MonoBehaviour
     public GameObject bézierMenu;
     public GameObject lissageMenu;
     public GameObject extrusionsMenu;
+    public GameObject colorsMenu;
 
+    public GameObject mainCam, resultCam;
+    public bool isRotating = false;
+
+    public Material red, green, blue, yellow, white;
     
     GameObject Sommet;
     [FormerlySerializedAs("Line")] public LineRenderer curLine;
@@ -57,9 +62,12 @@ public class LineConstrutor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (isRotating)
         {
-           
+            resultCam.transform.RotateAround(GameObject.Find("Mesh").transform.rotation.eulerAngles, Vector3.up, 40 * Time.deltaTime);
+            resultCam.transform.RotateAround(GameObject.Find("Mesh").transform.rotation.eulerAngles, Vector3.right, 40 * Time.deltaTime);
+           // resultCam.transform.RotateAround(GameObject.Find("Mesh").transform.rotation.eulerAngles, Vector3.forward, 40 * Time.deltaTime);
+
         }
 
         
@@ -191,6 +199,11 @@ public class LineConstrutor : MonoBehaviour
         
         if (Input.GetMouseButtonDown(1))
         {
+         
+            isRotating = false;
+            resultCam.SetActive(false);
+            mainCam.SetActive(true);
+           
             tracé = false;
             fenêtragePanel.SetActive(false);
             remplissagePanel.SetActive(false);
@@ -450,6 +463,9 @@ public class LineConstrutor : MonoBehaviour
     public void Beziers()
     {
         //menuPanel.SetActive(false);
+        isRotating = false;
+        resultCam.SetActive(false);
+        mainCam.SetActive(true);
         Clear();
         menuPanel.transform.GetChild(3).gameObject.SetActive(false);
         bézierMenu.transform.GetChild(0).gameObject.SetActive(true);
@@ -758,8 +774,8 @@ public class LineConstrutor : MonoBehaviour
        
 
         extrusionsMenu.SetActive(false);
-        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
-        menuPanel.SetActive(false);
+        colorsMenu.SetActive(true);
+        
     }
 
     public void ClearExtru()
@@ -773,6 +789,14 @@ public class LineConstrutor : MonoBehaviour
         extrusionsMenu.SetActive(false);
 
         Clear();
+        GameObject[] extrus = GameObject.FindGameObjectsWithTag("Extru");
+        foreach (GameObject obj in extrus)
+        {
+            if(obj.transform.name == "Mesh")
+            {
+                Destroy(obj);
+            }
+        }
 
         RetourBéziers();
     }
@@ -849,8 +873,9 @@ public class LineConstrutor : MonoBehaviour
             mesh.RecalculateUVDistributionMetric(0);
 
             // Set up game object with mesh;
-            GameObject meshGameObject = new GameObject();
+            GameObject meshGameObject = new GameObject("Mesh");
             meshGameObject.tag = "Extru";
+            curLine.gameObject.transform.SetParent(meshGameObject.transform, true);
             MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
             MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
             filter.mesh = mesh;
@@ -928,8 +953,9 @@ public class LineConstrutor : MonoBehaviour
             mesh.RecalculateUVDistributionMetric(0);
 
             // Set up game object with mesh;
-            GameObject meshGameObject = new GameObject();
+            GameObject meshGameObject = new GameObject("Mesh");
             meshGameObject.tag = "Extru";
+            curLine.gameObject.transform.SetParent(meshGameObject.transform, true);
             MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
             MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
             filter.mesh = mesh;
@@ -1031,8 +1057,9 @@ public class LineConstrutor : MonoBehaviour
             mesh.RecalculateUVDistributionMetric(0);
 
             // Set up game object with mesh;
-            GameObject meshGameObject = new GameObject();
+            GameObject meshGameObject = new GameObject("Mesh");
             meshGameObject.tag = "Extru";
+            curLine.gameObject.transform.SetParent(meshGameObject.transform, true);
             MeshRenderer mr = meshGameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
             MeshFilter filter = meshGameObject.AddComponent(typeof(MeshFilter)) as MeshFilter;
             filter.mesh = mesh;
@@ -1042,8 +1069,90 @@ public class LineConstrutor : MonoBehaviour
     }
 
 
+    public void RedColor()
+    {
+        GameObject.Find("Mesh").GetComponent<MeshRenderer>().material.color = Color.red;
+        colorsMenu.SetActive(false);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
+        menuPanel.SetActive(false);
+        ShowResult();
+    }
 
+    public void GreenColor()
+    {
 
+        GameObject.Find("Mesh").GetComponent<MeshRenderer>().material.color = Color.green;
+        colorsMenu.SetActive(false);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
+        menuPanel.SetActive(false);
+        ShowResult();
+    }
+
+    public void BlueColor()
+    {
+        GameObject.Find("Mesh").GetComponent<MeshRenderer>().material.color = Color.blue;
+        colorsMenu.SetActive(false);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
+        menuPanel.SetActive(false);
+        ShowResult();
+    }
+        
+    public void YellowColor()
+    {
+        GameObject.Find("Mesh").GetComponent<MeshRenderer>().material.color = Color.yellow;
+        colorsMenu.SetActive(false);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
+        menuPanel.SetActive(false);
+        ShowResult();
+
+    }
+
+    public void WhiteColor()
+    {
+
+        GameObject.Find("Mesh").GetComponent<MeshRenderer>().material.color = Color.white;
+        colorsMenu.SetActive(false);
+        menuPanel.transform.GetChild(3).gameObject.SetActive(true);
+        menuPanel.SetActive(false);
+        ShowResult();
+    }
+
+    public void ShowResult()
+    {
+
+        isRotating = true;
+        mainCam.SetActive(false);
+        resultCam.SetActive(true);
+
+       /* GameObject[] extrus = GameObject.FindGameObjectsWithTag("Extru");
+        foreach(GameObject obj in extrus)
+        {
+            if(obj.transform.name != "Mesh")
+            {
+               obj.SetActive(false);
+            }
+        }
+       
+       */
+        //GameObject.Find("Trajectoire").SetActive(false);
+        //GameObject.Find("Origine").SetActive(false);
+        /* if (curSpline != null) curSpline.pgoList.Clear();
+
+         linkedLine.Clear();
+         linkedSpline.Clear();
+         if (curLine != null)
+         {
+             curLine.positionCount = 0;
+             tempcount = 0;
+             curLine.loop = false;
+         }
+
+         Line2.positionCount = 0;
+         tempcount2 = 0;
+         Line2.loop = false;
+        */
+
+    }
     public void DécoupageQuelconque()
     {
         
