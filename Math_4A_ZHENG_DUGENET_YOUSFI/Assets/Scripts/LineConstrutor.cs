@@ -47,10 +47,18 @@ public class LineConstrutor : MonoBehaviour
                 newLine.positionCount = 2;
                 newLine.SetPosition(0,points.Last().transform.position);
                 newLine.SetPosition(1,newP.transform.position);
+                lines.Add(newLine);
             }
             points.Add(newP);
             if (points.Count == 3)
             {
+                GameObject newGO = new GameObject();
+                newGO.name = "sides";
+                LineRenderer newLineEnd = newGO.AddComponent<LineRenderer>();
+                newLineEnd.positionCount = 2;
+                newLineEnd.SetPosition(0,points.Last().transform.position);
+                newLineEnd.SetPosition(1,points.First().transform.position);
+                lines.Add(newLineEnd);
                 Vector3[] normals = fonctionMath.getNormals(points[0].transform.position, points[1].transform.position, points[2].transform.position);
                 int index = 0;
                 foreach (var n in normals)
@@ -62,9 +70,22 @@ public class LineConstrutor : MonoBehaviour
                     Vector3 newPos = (points[(index + 1) % 3].transform.position + points[index].transform.position)/2f;
                     newPos.z = points[index].transform.position.z;
                     newLine.SetPosition(0,newPos);
-                    newLine.SetPosition(1,n);
+                    newLine.SetPosition(1,newPos+n);
+                    lines.Add(newLine);
                     index++;
                 }
+
+                foreach (var line in lines)
+                {
+                    line.startWidth = .05f;
+                    line.endWidth = .05f;
+                }
+
+                Vector3 centerCircle = fonctionMath.getCenterCircle(points[0].transform.position, points[1].transform.position, points[2].transform.position);
+                centerCircle.z = nearClipPlaneWorldPoint;
+                pointGO.transform.position = centerCircle;
+                GameObject center = Instantiate(pointGO);
+                center.name = "center";
             }
         }
     }
