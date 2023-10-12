@@ -11,12 +11,13 @@ using UnityEngine.EventSystems;
 
 public class LineConstrutor : MonoBehaviour
 {
-    private Camera cam;
+    public Camera cam;
     GameObject Sommet;
     [FormerlySerializedAs("Line")] public LineRenderer curLine;
 
     public GameObject pointGO;
-
+    public List<GameObject> points;
+    public List<LineRenderer> lines;
     private float nearClipPlaneWorldPoint = 0;
     // Start is called before the first frame update
     void Start()
@@ -38,7 +39,33 @@ public class LineConstrutor : MonoBehaviour
                 nearClipPlaneWorldPoint = point.z;
             pointGO.transform.position = point;
             GameObject newP = Instantiate(pointGO);
-            newP.tag = "Extru";
+            if (points.Count > 0)
+            {
+                GameObject newGO = new GameObject();
+                newGO.name = "sides";
+                LineRenderer newLine = newGO.AddComponent<LineRenderer>();
+                newLine.positionCount = 2;
+                newLine.SetPosition(0,points.Last().transform.position);
+                newLine.SetPosition(1,newP.transform.position);
+            }
+            points.Add(newP);
+            if (points.Count == 3)
+            {
+                Vector3[] normals = fonctionMath.getNormals(points[0].transform.position, points[1].transform.position, points[2].transform.position);
+                int index = 0;
+                foreach (var n in normals)
+                {
+                    GameObject newNormals = new GameObject();
+                    newNormals.name = "Normals";
+                    LineRenderer newLine = newNormals.AddComponent<LineRenderer>();
+                    newLine.positionCount = 2;
+                    Vector3 newPos = (points[(index + 1) % 3].transform.position + points[index].transform.position)/2f;
+                    newPos.z = points[index].transform.position.z;
+                    newLine.SetPosition(0,newPos);
+                    newLine.SetPosition(1,n);
+                    index++;
+                }
+            }
         }
     }
 }
