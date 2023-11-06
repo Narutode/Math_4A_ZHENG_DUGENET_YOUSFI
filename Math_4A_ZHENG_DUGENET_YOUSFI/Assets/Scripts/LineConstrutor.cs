@@ -99,30 +99,19 @@ public class LineConstrutor : MonoBehaviour
 
                 foreach (var curP in listPoints.Skip(3))
                 {
-                    List<Segments> listSegmentsToDelete = new List<Segments>();
-
-                    foreach (var freeP in listPoints)
+                    List<Segments> ListSegmentsToAdd = new List<Segments>();
+                    foreach (var curSeg in ListSegments)
                     {
-                        if (ListSegments.Any(t => (t.Point1 == freeP && t.Point2 == curP) || (t.Point1 == curP && t.Point2 == freeP)))
+                        if (isPointVisibleFromSegment(curP, curSeg))
                         {
-                            Segments curS = ListSegments.FirstOrDefault(t => (t.Point1 == freeP && t.Point2 == curP) || (t.Point1 == curP && t.Point2 == freeP));
-                            if (!listSegmentsToDelete.Contains(curS))
-                                listSegmentsToDelete.Add(curS);
+                            Segments newSeg1 = new Segments {Point1 = curP, Point2 = curSeg.Point1};
+                            Segments newSeg2 = new Segments {Point1 = curP, Point2 = curSeg.Point2};
+                            ListSegmentsToAdd.Add(newSeg1);
+                            ListSegmentsToAdd.Add(newSeg2);
+                            ListTriangles.Add(new Triangles{Seg1 = curSeg, Seg2 = newSeg1, Seg3 = newSeg2});
                         }
                     }
-
-                    foreach (var segment in listSegmentsToDelete)
-                    {
-                        ListSegments.Remove(segment);
-                    }
-
-                    foreach (var segment in listSegmentsToDelete)
-                    {
-                        ListSegments.Add(new Segments { Point1 = curP, Point2 = segment.Point1 });
-                        ListSegments.Add(new Segments { Point1 = segment.Point2, Point2 = curP });
-
-                        ListTriangles.Add(new Triangles { Seg1 = segment, Seg2 = ListSegments.Last(), Seg3 = ListSegments[ListSegments.Count - 2] });
-                    }
+                    ListSegments.AddRange(ListSegmentsToAdd);
                 }
                 
                 int size = ListTriangles.Count;
@@ -139,6 +128,8 @@ public class LineConstrutor : MonoBehaviour
                     newLine.SetPosition(3,new Vector3(ListTriangles[i].Seg2.Point2.x,ListTriangles[i].Seg2.Point2.y, _nearClipPlaneWorldPoint));
                     newLine.SetPosition(4,new Vector3(ListTriangles[i].Seg3.Point1.x,ListTriangles[i].Seg3.Point1.y, _nearClipPlaneWorldPoint));
                     newLine.SetPosition(5,new Vector3(ListTriangles[i].Seg3.Point2.x,ListTriangles[i].Seg3.Point2.y, _nearClipPlaneWorldPoint));
+                    newLine.startWidth = 0.05f;
+                    newLine.endWidth = 0.05f;
                     lines.Add(newLine);
                 }
             }
@@ -153,5 +144,37 @@ public class LineConstrutor : MonoBehaviour
         }
     }
     
+    bool isPointVisibleFromSegment(Vector2 point, Segments seg)
+    {
+        Vector2 midPoint = (seg.Point1 + seg.Point2)/2f;
+        Segments tmpSeg = new Segments{Point1 = midPoint, Point2 = point};
+        foreach (var curSeg in ListSegments)
+        {
+            if (DoSegmentsIntersect(tmpSeg, curSeg))
+                return false;
+        }
+        return true;
+    }
     
+    // Fonction pour vérifier si deux segments se croisent
+    bool DoSegmentsIntersect(Segments segment1, Segments segment2)
+    {
+        double dx1 = segment1.Point2.x - segment1.Point1.x;
+        double dy1 = segment1.Point2.y - segment1.Point1.y;
+        double dx2 = segment2.Point2.x - segment2.Point1.x;
+        double dy2 = segment2.Point2.y - segment2.Point1.y;
+
+        double delta = dx1 * dy2 - dx2 * dy1;
+
+        if (delta == 0)
+        {
+            // Les segments sont parallèles, ils ne se croisent pas (ou ils se superposent)
+            return false;
+        }
+
+        double t1 = ((segment2.Point1.x - segment1.Point1.x) * dy2 - (segment2.Point1.y - segment1.Point1.y) * dx2) / delta;
+        double t2 = ((segment2.Point1.x - segment1.Point1.x) * dy1 - (segment2.Point1.y - segment1.Point1.y) * dx1) / delta;
+
+        return t1 is > 0.1 and < .9 && t2 is > 0.1 and < .9;
+    }
 }
