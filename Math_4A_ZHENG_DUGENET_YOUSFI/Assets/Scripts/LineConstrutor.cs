@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Color = UnityEngine.Color;
-using UnityEngine.EventSystems;
+//using UnityEngine.EventSystems;
 using static FonctionMath;
 
 public struct Segments
@@ -69,9 +69,13 @@ public class LineConstrutor : MonoBehaviour
             
             if (listGameObjects.Count == 10)
             {
+                
                 /*
+                float start = Time.realtimeSinceStartup;
                 //List<Vector2> jarvis = GetJarvis(listPoints);
                 List<Vector2> jarvis = GetGrahamScan(listPoints);
+                float end = Time.realtimeSinceStartup;
+                Debug.Log(end-start);
                 int size = jarvis.Count;
                 for (int i = 0; i < size; i++)
                 {
@@ -99,10 +103,10 @@ public class LineConstrutor : MonoBehaviour
 
                 foreach (var curP in listPoints.Skip(3))
                 {
-                    List<Segments> ListSegmentsToAdd = new List<Segments>();
+                    List<Segments> ListSegmentsToAdd = new List<Segments>(ListSegments);
                     foreach (var curSeg in ListSegments)
                     {
-                        if (isPointVisibleFromSegment(curP, curSeg))
+                        if (isPointVisibleFromSegment(curP, curSeg, ListSegmentsToAdd))
                         {
                             Segments newSeg1 = new Segments {Point1 = curP, Point2 = curSeg.Point1};
                             Segments newSeg2 = new Segments {Point1 = curP, Point2 = curSeg.Point2};
@@ -111,6 +115,7 @@ public class LineConstrutor : MonoBehaviour
                             ListTriangles.Add(new Triangles{Seg1 = curSeg, Seg2 = newSeg1, Seg3 = newSeg2});
                         }
                     }
+                    ListSegments.Clear();
                     ListSegments.AddRange(ListSegmentsToAdd);
                 }
                 
@@ -144,11 +149,11 @@ public class LineConstrutor : MonoBehaviour
         }
     }
     
-    bool isPointVisibleFromSegment(Vector2 point, Segments seg)
+    bool isPointVisibleFromSegment(Vector2 point, Segments seg, List<Segments> segToCheck)
     {
         Vector2 midPoint = (seg.Point1 + seg.Point2)/2f;
         Segments tmpSeg = new Segments{Point1 = midPoint, Point2 = point};
-        foreach (var curSeg in ListSegments)
+        foreach (var curSeg in segToCheck)
         {
             if (DoSegmentsIntersect(tmpSeg, curSeg))
                 return false;
