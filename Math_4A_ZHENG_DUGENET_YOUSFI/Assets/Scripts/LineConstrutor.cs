@@ -37,7 +37,8 @@ public class LineConstrutor : MonoBehaviour
 
     public List<LineRenderer> lines;
     private float _nearClipPlaneWorldPoint = 0;
-    
+
+    public float Timer;
     // Update is called once per frame
     void Update()
     {
@@ -70,11 +71,12 @@ public class LineConstrutor : MonoBehaviour
             if (listGameObjects.Count == 10)
             {
                 
-                /*
+                
                 float start = Time.realtimeSinceStartup;
                 //List<Vector2> jarvis = GetJarvis(listPoints);
                 List<Vector2> jarvis = GetGrahamScan(listPoints);
                 float end = Time.realtimeSinceStartup;
+                Timer = end - start;
                 Debug.Log(end-start);
                 int size = jarvis.Count;
                 for (int i = 0; i < size; i++)
@@ -86,7 +88,8 @@ public class LineConstrutor : MonoBehaviour
                     newLine.SetPosition(0,new Vector3(jarvis[i].x,jarvis[i].y, _nearClipPlaneWorldPoint));
                     newLine.SetPosition(1,new Vector3(jarvis[(i+1)%size].x,jarvis[(i+1)%size].y, _nearClipPlaneWorldPoint));
                     lines.Add(newLine);
-                }*/
+                }
+                
                 // Sort the points (assuming ascending order)
                 listPoints = listPoints.OrderBy(p => p.x).ThenBy(p => p.y).ToList();
 
