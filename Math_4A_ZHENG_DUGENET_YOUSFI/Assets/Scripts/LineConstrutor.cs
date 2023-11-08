@@ -38,7 +38,7 @@ public class LineConstrutor : MonoBehaviour
     public List<LineRenderer> lines;
     private float _nearClipPlaneWorldPoint = 0;
 
-    public float Timer;
+    [SerializeField]public static float Timer;
 
     public GameObject clickMenu;
     public GameObject parent;
@@ -166,6 +166,7 @@ public class LineConstrutor : MonoBehaviour
         
         float end = Time.realtimeSinceStartup;
         Timer = end - start;
+        Timer = Timer * 1000;
         Debug.Log(end - start);
         int size = jarvis.Count;
         for (int i = 0; i < size; i++)
@@ -190,6 +191,7 @@ public class LineConstrutor : MonoBehaviour
         List<Vector2> graham = GetGrahamScan(listPoints);
         float end = Time.realtimeSinceStartup;
         Timer = end - start;
+        Timer = Timer * 1000;
         Debug.Log(end - start);
         int size = graham.Count;
         for (int i = 0; i < size; i++)
@@ -281,6 +283,7 @@ public class LineConstrutor : MonoBehaviour
 
     public void Clear()
     {
+        Timer = 0;
         lines.Clear();
         listPoints.Clear();
         listGameObjects.Clear();
