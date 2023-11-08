@@ -75,47 +75,43 @@ public static class FonctionMath
         return res;
     }
 
-    public static List<Vector2> GetJarvis(List<Vector2> pointList)
-    {
-        List<Vector2> jarvis = new List<Vector2>();
-        
-        //On trouve le point le plus à gauche et on le retire de la liste
-        Vector2 startPoint = pointList.First();
-        foreach (var point in pointList)
-        {
-            if (point.x < startPoint.x)
-                startPoint = point;
-        }
-        jarvis.Add(startPoint);
-        
-        Vector2 curPoint = startPoint;
+    public static int orientation(Vector2 p, Vector2 q, Vector2 r) 
+    { 
+        float val = (q.y - p.y) * (r.x - q.x) - 
+                  (q.x - p.x) * (r.y - q.y); 
+      
+        if (Mathf.Abs(val) < 0.001f) return 0; 
+        return (val > 0)? 1: 2; 
+    } 
+    public static List<Vector2> getJarvis(List<Vector2> points) 
+    { 
 
+        List<Vector2> jarvis = new List<Vector2>(); 
+      
+        int startPoint = 0, n = points.Count(); 
+        for (int i = 1; i < n; i++) 
+            if (points[i].x < points[startPoint].x) 
+                startPoint = i; 
+
+        int curPoint = startPoint, nextPoint; 
         do
-        {
-            Vector2 curNormal = new Vector2(curPoint.y, -curPoint.x);
-            Vector2 nextPoint = pointList.First();
-            float smallestAngle = Mathf.PI;
-            foreach (var point in pointList)
+        { 
+            jarvis.Add(points[curPoint]); 
+
+            nextPoint = (curPoint + 1) % n; 
+              
+            for (int i = 0; i < n; i++) 
             {
-                if (point != curPoint)
-                {
-                    //On compare les angles et on stock le plus petit
-                    float curAngle = Angle(curNormal, point - curPoint);
-                    if (curAngle < smallestAngle)
-                    {
-                        smallestAngle = curAngle;
-                        nextPoint = point;
-                    }
-                }
-            }
-            curPoint = nextPoint;
-            pointList.Remove(curPoint);
-            jarvis.Add(curPoint);
+                if (orientation(points[curPoint], points[i], points[nextPoint]) == 2) 
+                    nextPoint = i; 
+            } 
+            
+            curPoint = nextPoint; 
+      
         } while (curPoint != startPoint);
-
+      
         return jarvis;
-    }
-
+    } 
     public static List<Vector2> GetGrahamScan(List<Vector2> pointList)
     {
         List<Vector2> grahamScan = new List<Vector2>();

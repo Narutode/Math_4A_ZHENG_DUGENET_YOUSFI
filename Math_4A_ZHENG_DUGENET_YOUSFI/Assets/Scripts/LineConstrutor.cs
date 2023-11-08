@@ -154,7 +154,7 @@ public class LineConstrutor : MonoBehaviour
         double t1 = ((segment2.Point1.x - segment1.Point1.x) * dy2 - (segment2.Point1.y - segment1.Point1.y) * dx2) / delta;
         double t2 = ((segment2.Point1.x - segment1.Point1.x) * dy1 - (segment2.Point1.y - segment1.Point1.y) * dx1) / delta;
 
-        return t1 is > 0.1 and < .9 && t2 is > 0.1 and < .9;
+        return t1 is > 0.01 and < .99 && t2 is > 0.01 and < .99;
     }
 
 
@@ -162,7 +162,7 @@ public class LineConstrutor : MonoBehaviour
     public void JarvisMarche()
     {
         float start = Time.realtimeSinceStartup;
-        List<Vector2> jarvis = GetJarvis(listPoints);
+        List<Vector2> jarvis = getJarvis(listPoints);
         
         float end = Time.realtimeSinceStartup;
         Timer = end - start;
@@ -273,6 +273,18 @@ public class LineConstrutor : MonoBehaviour
 
     public void DelaunayCore()
     {
+        GameObject newGO = new GameObject();
+        newGO.transform.SetParent(parent.transform); 
+        newGO.name = "sides";
+        LineRenderer newLine = newGO.AddComponent<LineRenderer>();
+        newLine.positionCount = 4;
+        newLine.SetPosition(0, new Vector3(listPoints[0].x, listPoints[0].y, _nearClipPlaneWorldPoint));
+        newLine.SetPosition(1, new Vector3(listPoints[1].x, listPoints[1].y, _nearClipPlaneWorldPoint));
+        newLine.SetPosition(2, new Vector3(listPoints[2].x, listPoints[2].y, _nearClipPlaneWorldPoint));
+        newLine.SetPosition(3, new Vector3(listPoints[0].x, listPoints[0].y, _nearClipPlaneWorldPoint));
+        newLine.startWidth = 0.05f;
+        newLine.endWidth = 0.05f;
+        lines.Add(newLine);
         Vector3 centerCircle = FonctionMath.GETCenterCircle(listPoints[0], listPoints[1], listPoints[2]);
         centerCircle.z = _nearClipPlaneWorldPoint;
         pointGO.transform.position = centerCircle;
