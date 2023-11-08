@@ -178,6 +178,8 @@ public class LineConstrutor : MonoBehaviour
             newLine.positionCount = 2;
             newLine.SetPosition(0, new Vector3(jarvis[i].x, jarvis[i].y, _nearClipPlaneWorldPoint));
             newLine.SetPosition(1, new Vector3(jarvis[(i + 1) % size].x, jarvis[(i + 1) % size].y, _nearClipPlaneWorldPoint));
+            newLine.startWidth = 0.05f;
+            newLine.endWidth = 0.05f;
             lines.Add(newLine);
         }
     }
@@ -200,6 +202,8 @@ public class LineConstrutor : MonoBehaviour
             newLine.positionCount = 2;
             newLine.SetPosition(0, new Vector3(graham[i].x, graham[i].y, _nearClipPlaneWorldPoint));
             newLine.SetPosition(1, new Vector3(graham[(i + 1) % size].x, graham[(i + 1) % size].y, _nearClipPlaneWorldPoint));
+            newLine.startWidth = 0.05f;
+            newLine.endWidth = 0.05f;
             lines.Add(newLine);
         }
     }
