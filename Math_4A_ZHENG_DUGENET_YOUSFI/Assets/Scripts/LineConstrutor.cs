@@ -30,6 +30,7 @@ public class LineConstrutor : MonoBehaviour
     [FormerlySerializedAs("Line")] public LineRenderer curLine;
 
     public GameObject pointGO;
+    public GameObject pointCenter;
     public List<GameObject> listGameObjects;
     public List<Vector2> listPoints;
     public List<Segments> ListSegments = new List<Segments>();
@@ -287,8 +288,8 @@ public class LineConstrutor : MonoBehaviour
         lines.Add(newLine);
         Vector3 centerCircle = FonctionMath.GETCenterCircle(listPoints[0], listPoints[1], listPoints[2]);
         centerCircle.z = _nearClipPlaneWorldPoint;
-        pointGO.transform.position = centerCircle;
-        GameObject center = Instantiate(pointGO);
+        pointCenter.transform.position = centerCircle;
+        GameObject center = Instantiate(pointCenter);
         center.transform.parent = parent.transform;
         center.name = "center";
     }

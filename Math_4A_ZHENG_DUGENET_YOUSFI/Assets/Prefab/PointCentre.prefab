@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3107938435906345453}
   - component: {fileID: 3107938435906345458}
   m_Layer: 0
-  m_Name: Point
+  m_Name: PointCentre
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3107938435906345459}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -13.576449, y: -2.6125917, z: 1.2999878}
+  m_LocalPosition: {x: 0.797036, y: 3.894863, z: 1.2999878}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.0000001}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -62,7 +62,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c1b16feeb8d6cbe4c8424dbb283eed74, type: 2}
+  - {fileID: 2100000, guid: 6dfa539a56483cf4a831d399b8fb6bde, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

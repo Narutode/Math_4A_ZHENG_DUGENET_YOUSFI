@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731704, g: 0.13414727, b: 0.121078536, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731749, g: 0.13414757, b: 0.1210787, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -14220,6 +14220,7 @@ MonoBehaviour:
   cam: {fileID: 1888744961}
   curLine: {fileID: 684703835}
   pointGO: {fileID: 3107938435906345459, guid: 3216ac9a68a09114b94b1ad40d7e7b1d, type: 3}
+  pointCenter: {fileID: 3107938435906345459, guid: 5bdc16cd913b21a4da8e78ca736d0af4, type: 3}
   listGameObjects: []
   listPoints: []
   lines: []
