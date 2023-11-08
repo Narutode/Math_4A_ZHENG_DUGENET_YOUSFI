@@ -48,31 +48,35 @@ public class LineConstrutor : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0)) // click gauche
         {
-            Debug.Log("place point");
-            Vector3 point = new Vector3();
-            Vector2 mousePos = Input.mousePosition;
-
-            point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
-            if (_nearClipPlaneWorldPoint == 0)
-                _nearClipPlaneWorldPoint = point.z;
-            pointGO.transform.position = point;
-            GameObject newP = Instantiate(pointGO);
-            newP.transform.parent = parent.transform;
-            /*
-            if (listGameObjects.Count > 0)
+            if (clickMenu.activeSelf == false)
             {
-                GameObject newGO = new GameObject();
-                newGO.name = "sides";
-                LineRenderer newLine = newGO.AddComponent<LineRenderer>();
-                newLine.positionCount = 2;
-                newLine.SetPosition(0,listGameObjects.Last().transform.position);
-                newLine.SetPosition(1,newP.transform.position);
-                lines.Add(newLine);
-            }
-            */
-            listGameObjects.Add(newP);
-            listPoints.Add(newP.transform.position);
 
+            
+                Debug.Log("place point");
+                Vector3 point = new Vector3();
+                Vector2 mousePos = Input.mousePosition;
+
+                point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
+                if (_nearClipPlaneWorldPoint == 0)
+                    _nearClipPlaneWorldPoint = point.z;
+                pointGO.transform.position = point;
+                GameObject newP = Instantiate(pointGO);
+                newP.transform.parent = parent.transform;
+                /*
+                if (listGameObjects.Count > 0)
+                {
+                    GameObject newGO = new GameObject();
+                    newGO.name = "sides";
+                    LineRenderer newLine = newGO.AddComponent<LineRenderer>();
+                    newLine.positionCount = 2;
+                    newLine.SetPosition(0,listGameObjects.Last().transform.position);
+                    newLine.SetPosition(1,newP.transform.position);
+                    lines.Add(newLine);
+                }
+                */
+                listGameObjects.Add(newP);
+                listPoints.Add(newP.transform.position);
+            }
         }
         if (Input.GetMouseButtonDown(1))
         {
