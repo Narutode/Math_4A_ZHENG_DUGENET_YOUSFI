@@ -113,13 +113,12 @@ public class LineConstrutor : MonoBehaviour
                 }*/
 
 
-                /*
-                    Vector3 centerCircle = fonctionMath.getCenterCircle(listPoints[0].transform.position, listPoints[1].transform.position, listPoints[2].transform.position);
-                    centerCircle.z = nearClipPlaneWorldPoint;
-                    pointGO.transform.position = centerCircle;
-                    GameObject center = Instantiate(pointGO);
-                    center.name = "center";
-                */
+                
+                   
+
+                    
+                
+                
          }
         
     }
@@ -268,6 +267,16 @@ public class LineConstrutor : MonoBehaviour
     public void Flipping()
     {
 
+    }
+
+    public void DelaunayCore()
+    {
+        Vector3 centerCircle = FonctionMath.GETCenterCircle(listPoints[0], listPoints[1], listPoints[2]);
+        centerCircle.z = _nearClipPlaneWorldPoint;
+        pointGO.transform.position = centerCircle;
+        GameObject center = Instantiate(pointGO);
+        center.transform.parent = parent.transform;
+        center.name = "center";
     }
 
     public void Clear()
