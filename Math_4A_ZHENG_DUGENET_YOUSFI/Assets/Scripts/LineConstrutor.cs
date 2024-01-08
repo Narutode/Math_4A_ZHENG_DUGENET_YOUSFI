@@ -51,6 +51,12 @@ public class LineConstrutor : MonoBehaviour
 
     public GameObject clickMenu;
     public GameObject parent;
+    public Material mat;
+
+    private void Start()
+    {
+        _nearClipPlaneWorldPoint = cam.nearClipPlane + 1f;
+    }
 
     // Update is called once per frame
     void Update()
@@ -66,41 +72,46 @@ public class LineConstrutor : MonoBehaviour
                 Vector2 mousePos = Input.mousePosition;
 
                 point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane + 1f));
-                if (_nearClipPlaneWorldPoint == 0)
-                    _nearClipPlaneWorldPoint = point.z;
                 pointGO.transform.position = point;
                 GameObject newP = Instantiate(pointGO);
                 newP.transform.parent = parent.transform;
-                /*
-                if (listGameObjects.Count > 0)
-                {
-                    GameObject newGO = new GameObject();
-                    newGO.name = "sides";
-                    LineRenderer newLine = newGO.AddComponent<LineRenderer>();
-                    newLine.positionCount = 2;
-                    newLine.SetPosition(0,listGameObjects.Last().transform.position);
-                    newLine.SetPosition(1,newP.transform.position);
-                    lines.Add(newLine);
-                }
-                */
                 listGameObjects.Add(newP);
                 listPoints.Add(newP.transform.position);
+            }
+
+            if(listPoints.Count >= 3)
+            {
+                //On supprime les segments précédents
+                for (int i = 0; i < parent.transform.childCount; i++)
+                {
+                    var go = parent.transform.GetChild(i).gameObject;
+                    if (go.TryGetComponent<LineRenderer>(out var t))
+                        Destroy(go);
+                }
+                lines.Clear();
+                ListSegments.Clear();
+                ListTriangles.Clear();
+
+                Triangulation();
+                DelaunayRefinementAlgorithm();
             }
         }
         if (Input.GetMouseButtonDown(1))
         {
             if (listGameObjects.Count >= 3)
             {
-                Debug.Log(listGameObjects.Count);
-                
-                    Debug.Log("click");
-                    if (clickMenu.activeSelf == false)
-                    {
-                        Debug.Log("clickmenu is false");
-                        clickMenu.SetActive(true);
-                    }
-
-             }
+                Debug.Log(listGameObjects.Count);              
+                Debug.Log("click");
+                if (clickMenu.activeSelf == false)
+                {
+                    Debug.Log("clickmenu is false");
+                    clickMenu.SetActive(true);
+                }
+                else
+                {
+                    clickMenu.SetActive(false);
+                }
+            }
 
                 /*
                 float start = Time.realtimeSinceStartup;
@@ -290,7 +301,7 @@ public class LineConstrutor : MonoBehaviour
         
         // Appliquez l'algorithme du flipping d'arêtes pour améliorer la triangulation
         bool flipped;
-        int limit = 100000;
+        int limit = 1000;
         do
         {
             flipped = false;
@@ -486,6 +497,7 @@ public class LineConstrutor : MonoBehaviour
 
     public void voronoi()
     {
+        Color color = Color.green;
         /*
         for (int i = 0; i < ListTriangles.Count; i++)
         {
@@ -534,76 +546,107 @@ public class LineConstrutor : MonoBehaviour
                         new Vector3(center2.x, center2.y, _nearClipPlaneWorldPoint));
                     newLine.startWidth = 0.05f;
                     newLine.endWidth = 0.05f;
+                    newLine.startColor = color;
+                    newLine.endColor = color;
+                    newLine.material = mat;
                     lines.Add(newLine);
                 }
             }
         }*/
+        /*
         // Fonction pour générer le diagramme de Voronoi à partir de la triangulation de Delaunay
         List<Vector2> points = listPoints;
-            // Initialisez les cellules du diagramme de Voronoi
-            List<Cell> voronoiCells = new List<Cell>();
+        // Initialisez les cellules du diagramme de Voronoi
+        List<Cell> voronoiCells = new List<Cell>();
+        for (int i = 0; i < points.Count; i++)
+        {
+            voronoiCells.Add(new Cell { Site = points[i], Vertices = new List<Vector2>() });
+        }
+
+        // Parcourez chaque triangle de la triangulation de Delaunay
+        foreach (var triangle in ListTriangles)
+        {
+            // Trouvez le cercle circonscrit du triangle (centre et rayon)
+            List<Vector2> points1 = new List<Vector2>();
+            points1.Add(triangle.Seg1.Point1);
+            if(!points1.Contains(triangle.Seg1.Point2))
+                points1.Add(triangle.Seg1.Point2);
+            if(!points1.Contains(triangle.Seg2.Point1))
+                points1.Add(triangle.Seg2.Point1);
+            if(!points1.Contains(triangle.Seg2.Point2))
+                points1.Add(triangle.Seg2.Point2);
+            if(!points1.Contains(triangle.Seg3.Point1))
+                points1.Add(triangle.Seg3.Point1);
+            if(!points1.Contains(triangle.Seg3.Point2))
+                points1.Add(triangle.Seg3.Point2);
+            Vector2 circumcenter = GETCenterCircle(points1[0],points1[1],points1[2]);
+            float circumradius = Vector2.Distance(circumcenter, triangle.Seg1.Point1);
+
+            // Trouvez l'index du site correspondant au cercle circonscrit
+            int siteIndex = -1;
             for (int i = 0; i < points.Count; i++)
             {
-                voronoiCells.Add(new Cell { Site = points[i], Vertices = new List<Vector2>() });
+                if (Vector2.Distance(points[i], circumcenter) < circumradius * 1.01f) // Tolerance pour éviter les erreurs d'arrondi
+                {
+                    siteIndex = i;
+                    break;
+                }
             }
 
-            // Parcourez chaque triangle de la triangulation de Delaunay
-            foreach (var triangle in ListTriangles)
+            // Si le cercle circonscrit correspond à un site, ajoutez les vertices de la cellule
+            if (siteIndex != -1)
             {
-                // Trouvez le cercle circonscrit du triangle (centre et rayon)
-                List<Vector2> points1 = new List<Vector2>();
-                points1.Add(triangle.Seg1.Point1);
-                if(!points1.Contains(triangle.Seg1.Point2))
-                    points1.Add(triangle.Seg1.Point2);
-                if(!points1.Contains(triangle.Seg2.Point1))
-                    points1.Add(triangle.Seg2.Point1);
-                if(!points1.Contains(triangle.Seg2.Point2))
-                    points1.Add(triangle.Seg2.Point2);
-                if(!points1.Contains(triangle.Seg3.Point1))
-                    points1.Add(triangle.Seg3.Point1);
-                if(!points1.Contains(triangle.Seg3.Point2))
-                    points1.Add(triangle.Seg3.Point2);
-                Vector2 circumcenter = GETCenterCircle(points1[0],points1[1],points1[2]);
-                float circumradius = Vector2.Distance(circumcenter, triangle.Seg1.Point1);
-
-                // Trouvez l'index du site correspondant au cercle circonscrit
-                int siteIndex = -1;
-                for (int i = 0; i < points.Count; i++)
-                {
-                    if (Vector2.Distance(points[i], circumcenter) < circumradius * 1.01f) // Tolerance pour éviter les erreurs d'arrondi
-                    {
-                        siteIndex = i;
-                        break;
-                    }
-                }
-
-                // Si le cercle circonscrit correspond à un site, ajoutez les vertices de la cellule
-                if (siteIndex != -1)
-                {
-                    voronoiCells[siteIndex].Vertices.Add(triangle.Seg1.Point1);
-                    voronoiCells[siteIndex].Vertices.Add(triangle.Seg2.Point1);
-                    voronoiCells[siteIndex].Vertices.Add(triangle.Seg3.Point1);
-                }
+                voronoiCells[siteIndex].Vertices.Add(triangle.Seg1.Point1);
+                voronoiCells[siteIndex].Vertices.Add(triangle.Seg2.Point1);
+                voronoiCells[siteIndex].Vertices.Add(triangle.Seg3.Point1);
             }
+        }
+        */
 
-            foreach (var c in voronoiCells)
-            {
-                foreach (var v in c.Vertices)
-                {
-                    GameObject newGO = new GameObject();
-                    newGO.transform.SetParent(parent.transform);
-                    newGO.name = "sides";
-                    LineRenderer newLine = newGO.AddComponent<LineRenderer>();
-                    newLine.positionCount = 2;
-                    newLine.SetPosition(0,
-                        new Vector3(c.Site.x, c.Site.y, _nearClipPlaneWorldPoint));
-                    newLine.SetPosition(1,
-                        new Vector3(v.x, v.y, _nearClipPlaneWorldPoint));
-                    newLine.startWidth = 0.05f;
-                    newLine.endWidth = 0.05f;
-                    lines.Add(newLine);
-                }
-            }
-            //return voronoiCells;
+        List<Segments> voronoiSegments = new List<Segments>();
+
+        // Parcourez chaque triangle de la triangulation de Delaunay
+        foreach (var triangle in ListTriangles)
+        {
+            // Trouvez le cercle circonscrit du triangle (centre et rayon)
+            List<Vector2> points1 = new List<Vector2>();
+            points1.Add(triangle.Seg1.Point1);
+            if (!points1.Contains(triangle.Seg1.Point2))
+                points1.Add(triangle.Seg1.Point2);
+            if (!points1.Contains(triangle.Seg2.Point1))
+                points1.Add(triangle.Seg2.Point1);
+            if (!points1.Contains(triangle.Seg2.Point2))
+                points1.Add(triangle.Seg2.Point2);
+            if (!points1.Contains(triangle.Seg3.Point1))
+                points1.Add(triangle.Seg3.Point1);
+            if (!points1.Contains(triangle.Seg3.Point2))
+                points1.Add(triangle.Seg3.Point2);
+            Vector2 circumcenter = GETCenterCircle(points1[0], points1[1], points1[2]);
+            float circumradius = Vector2.Distance(circumcenter, triangle.Seg1.Point1);
+
+            // Ajoutez les segments correspondants au cercle circonscrit
+            voronoiSegments.Add(new Segments { Point1 = circumcenter, Point2 = (triangle.Seg1.Point1 + triangle.Seg1.Point2)/2 });
+            voronoiSegments.Add(new Segments { Point1 = circumcenter, Point2 = (triangle.Seg2.Point1 + triangle.Seg2.Point2) / 2 });
+            voronoiSegments.Add(new Segments { Point1 = circumcenter, Point2 = (triangle.Seg3.Point1 + triangle.Seg3.Point2) / 2 });
+        }
+
+
+        foreach (var c in voronoiSegments)
+        {
+            GameObject newGO = new GameObject();
+            newGO.transform.SetParent(parent.transform);
+            newGO.name = "sides";
+            LineRenderer newLine = newGO.AddComponent<LineRenderer>();
+            newLine.positionCount = 2;
+            newLine.SetPosition(0,
+                new Vector3(c.Point1.x, c.Point1.y, _nearClipPlaneWorldPoint));
+            newLine.SetPosition(1,
+                new Vector3(c.Point2.x, c.Point2.y, _nearClipPlaneWorldPoint));
+            newLine.startWidth = 0.05f;
+            newLine.endWidth = 0.05f;
+            lines.Add(newLine);
+        }
+        //return voronoiCells;
+
     }
  }

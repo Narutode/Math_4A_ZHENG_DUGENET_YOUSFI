@@ -119,7 +119,8 @@ public static class FonctionMath
         } while (curPoint != startPoint);
       
         return jarvis;
-    } 
+    }
+
     public static List<Vector2> GetGrahamScan(List<Vector2> pointList)
     {
         List<Vector2> grahamScan = new List<Vector2>();
@@ -144,10 +145,41 @@ public static class FonctionMath
 
         return grahamScan;
     }
-    
+
+    public static List<Vector3> GetGrahamScan3D(List<Vector3> pointList)
+    {
+        List<Vector3> grahamScan = new List<Vector3>();
+
+        // Trouver le point le plus bas (et le plus à gauche) comme point de départ
+        Vector3 startPoint = pointList.OrderBy(p => p.y).ThenBy(p => p.x).ThenBy(p => p.z).First();
+
+        // Trier les points par angle par rapport au point de départ
+        List<Vector3> sortedPoints = pointList.OrderBy(p => Mathf.Atan2(p.y - startPoint.y, p.x - startPoint.x)).ThenBy(p => Mathf.Asin(p.z - startPoint.z)).ToList();
+
+        grahamScan.Add(startPoint);
+        grahamScan.Add(sortedPoints[0]);
+
+        for (int i = 1; i < sortedPoints.Count; i++)
+        {
+            while (grahamScan.Count > 1 && !IsConvex3D(grahamScan[grahamScan.Count - 2], grahamScan.Last(), sortedPoints[i]))
+            {
+                grahamScan.RemoveAt(grahamScan.Count - 1);
+            }
+            grahamScan.Add(sortedPoints[i]);
+        }
+
+        return grahamScan;
+    }
+
     private static bool IsConvex(Vector2 p0, Vector2 p1, Vector2 p2)
     {
         float crossProduct = (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
         return crossProduct >= 0;
+    }
+
+    private static bool IsConvex3D(Vector3 pointA, Vector3 pointB, Vector3 pointC)
+    {
+        Vector3 crossProduct = Vector3.Cross(pointB - pointA, pointC - pointA);
+        return crossProduct.z > 0f; // Vérifier si la composante z du produit vectoriel est négative
     }
 }
