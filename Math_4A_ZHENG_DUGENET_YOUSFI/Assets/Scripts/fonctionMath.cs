@@ -75,10 +75,10 @@ public static class FonctionMath
         return res;
     }
 
-    public static bool IsPointInsideCircumcircle(Vector2 point, Triangles triangle)
+    public static bool IsPointInsideCircumcircle(Vector2 point, TrianglesOld triangleOld)
     {
-        Vector2 center = GETCenterCircle(triangle.Seg1.Point1, triangle.Seg2.Point1, triangle.Seg3.Point1);
-        float radiusSquared = (triangle.Seg1.Point1 - center).sqrMagnitude;
+        Vector2 center = GETCenterCircle(triangleOld.Seg1.Point1, triangleOld.Seg2.Point1, triangleOld.Seg3.Point1);
+        float radiusSquared = (triangleOld.Seg1.Point1 - center).sqrMagnitude;
 
         return (point - center).sqrMagnitude < radiusSquared;
     }
