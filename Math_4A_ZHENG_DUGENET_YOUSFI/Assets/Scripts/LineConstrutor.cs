@@ -680,10 +680,13 @@ public class LineConstrutor : MonoBehaviour
         Color color = Color.green;
         List<Vector2> convexHull = getJarvis(listPoints);
         Debug.Log(convexHull.Count);
+        //pour chaque segment cheque si triangle adjacent (sinon check angle)
         for (int i = 0; i < ListTriangles.Count; i++)
         {
-            for (int j = i+1; j < ListTriangles.Count; j++)
+            for (int j = 0; j < ListTriangles.Count; j++)
             {
+                if(i==j)
+                    continue;
                 SegmentsOld commonEdge = FindCommonEdge(ListTriangles[i], ListTriangles[j]);
 
                 if (!float.IsPositiveInfinity(commonEdge.Point1.x))
@@ -701,6 +704,79 @@ public class LineConstrutor : MonoBehaviour
                     if(!points1.Contains(ListTriangles[i].Seg3.Point2))
                         points1.Add(ListTriangles[i].Seg3.Point2);
                     var center1 = GETCenterCircle(points1[0],points1[1],points1[2]);
+                    /*
+                    if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[1]))
+                    {
+                        Debug.Log("test");
+                        if (!IsObtuseAngle(points1[0], points1[1], points1[2]))
+                        {
+                            Vector2 segm = points1[0] - points1[1];
+                            Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
+                            GameObject outGO = new GameObject();
+                            outGO.transform.SetParent(parent.transform);
+                            outGO.name = "outside";
+                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
+                            outLine.positionCount = 2;
+                            outLine.SetPosition(0,
+                                new Vector3(center1.x, center1.y, _nearClipPlaneWorldPoint));
+                            outLine.SetPosition(1,
+                                new Vector3(center1.x+norm.x, center1.y+norm.y, _nearClipPlaneWorldPoint));
+                            outLine.startWidth = 0.05f;
+                            outLine.endWidth = 0.05f;
+                            outLine.startColor = Color.yellow;
+                            outLine.endColor = Color.yellow;
+                            outLine.material = mat;
+                            lines.Add(outLine);
+                        }
+                    } 
+                    if (convexHull.Contains(points1[1]) && convexHull.Contains(points1[2]))
+                    {
+                        Debug.Log("test");
+                        if (!IsObtuseAngle(points1[1], points1[2], points1[0]))
+                        {
+                            Vector2 segm = points1[1] - points1[2];
+                            Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
+                            GameObject outGO = new GameObject();
+                            outGO.transform.SetParent(parent.transform);
+                            outGO.name = "outside";
+                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
+                            outLine.positionCount = 2;
+                            outLine.SetPosition(0,
+                                new Vector3(center1.x+norm.x, center1.y+norm.y, _nearClipPlaneWorldPoint));
+                            outLine.SetPosition(1,
+                                new Vector3(center1.x, center1.y, _nearClipPlaneWorldPoint));
+                            outLine.startWidth = 0.05f;
+                            outLine.endWidth = 0.05f;
+                            outLine.startColor = Color.red;
+                            outLine.endColor = Color.red;
+                            outLine.material = mat;
+                            lines.Add(outLine);
+                        }
+                    }
+                    if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[2]))
+                    {
+                        Debug.Log("test");
+                        if (!IsObtuseAngle(points1[0], points1[2], points1[1]))
+                        {
+                            Vector2 segm = points1[0] - points1[2];
+                            Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
+                            GameObject outGO = new GameObject();
+                            outGO.transform.SetParent(parent.transform);
+                            outGO.name = "outside";
+                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
+                            outLine.positionCount = 2;
+                            outLine.SetPosition(0,
+                                new Vector3(center1.x+norm.x, center1.y+norm.y, _nearClipPlaneWorldPoint));
+                            outLine.SetPosition(1,
+                                new Vector3(center1.x, center1.y, _nearClipPlaneWorldPoint));
+                            outLine.startWidth = 0.05f;
+                            outLine.endWidth = 0.05f;
+                            outLine.startColor = Color.blue;
+                            outLine.endColor = Color.blue;
+                            outLine.material = mat;
+                            lines.Add(outLine);
+                        }
+                    }*/
                     
                     points1.Clear();
                     points1.Add(ListTriangles[j].Seg1.Point1);
@@ -715,79 +791,6 @@ public class LineConstrutor : MonoBehaviour
                     if(!points1.Contains(ListTriangles[j].Seg3.Point2))
                         points1.Add(ListTriangles[j].Seg3.Point2);
                     var center2 = GETCenterCircle(points1[0],points1[1],points1[2]);
-
-                    if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[1]))
-                    {
-                        Debug.Log("test");
-                        if (Mathf.Abs(Angle(points1[2] - points1[1], points1[2] - points1[0])) > Mathf.PI/2)
-                        {
-                            Vector2 segm = points1[0] - points1[1];
-                            Vector2 norm = new Vector2(-segm.y, segm.x) * -10;
-                            GameObject outGO = new GameObject();
-                            outGO.transform.SetParent(parent.transform);
-                            outGO.name = "outside";
-                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
-                            outLine.positionCount = 2;
-                            outLine.SetPosition(0,
-                                new Vector3(center2.x, center2.y, _nearClipPlaneWorldPoint));
-                            outLine.SetPosition(1,
-                                new Vector3(center2.x+norm.x, center2.y+norm.y, _nearClipPlaneWorldPoint));
-                            outLine.startWidth = 0.05f;
-                            outLine.endWidth = 0.05f;
-                            outLine.startColor = color;
-                            outLine.endColor = color;
-                            outLine.material = mat;
-                            lines.Add(outLine);
-                        }
-                    } 
-                    if (convexHull.Contains(points1[1]) && convexHull.Contains(points1[2]))
-                    {
-                        Debug.Log("test");
-                        if (Mathf.Abs(Angle(points1[0] - points1[1], points1[0] - points1[2])) > Mathf.PI/2)
-                        {
-                            Vector2 segm = points1[1] - points1[2];
-                            Vector2 norm = new Vector2(-segm.y, segm.x) * -10;
-                            GameObject outGO = new GameObject();
-                            outGO.transform.SetParent(parent.transform);
-                            outGO.name = "outside";
-                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
-                            outLine.positionCount = 2;
-                            outLine.SetPosition(0,
-                                new Vector3(center2.x+norm.x, center2.y+norm.y, _nearClipPlaneWorldPoint));
-                            outLine.SetPosition(1,
-                                new Vector3(norm.x, norm.y, _nearClipPlaneWorldPoint));
-                            outLine.startWidth = 0.05f;
-                            outLine.endWidth = 0.05f;
-                            outLine.startColor = color;
-                            outLine.endColor = color;
-                            outLine.material = mat;
-                            lines.Add(outLine);
-                        }
-                    }
-                    if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[2]))
-                    {
-                        Debug.Log("test");
-                        if (Mathf.Abs(Angle(points1[1] - points1[0], points1[1] - points1[2])) > Mathf.PI/2)
-                        {
-                            Vector2 segm = points1[0] - points1[2];
-                            Vector2 norm = new Vector2(-segm.y, segm.x) * -10;
-                            GameObject outGO = new GameObject();
-                            outGO.transform.SetParent(parent.transform);
-                            outGO.name = "outside";
-                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
-                            outLine.positionCount = 2;
-                            outLine.SetPosition(0,
-                                new Vector3(center2.x+norm.x, center2.y+norm.y, _nearClipPlaneWorldPoint));
-                            outLine.SetPosition(1,
-                                new Vector3(norm.x, norm.y, _nearClipPlaneWorldPoint));
-                            outLine.startWidth = 0.05f;
-                            outLine.endWidth = 0.05f;
-                            outLine.startColor = color;
-                            outLine.endColor = color;
-                            outLine.material = mat;
-                            lines.Add(outLine);
-                        }
-                    }
                     
                     GameObject newGO = new GameObject();
                     newGO.transform.SetParent(parent.transform);
@@ -800,12 +803,13 @@ public class LineConstrutor : MonoBehaviour
                         new Vector3(center2.x, center2.y, _nearClipPlaneWorldPoint));
                     newLine.startWidth = 0.05f;
                     newLine.endWidth = 0.05f;
-                    newLine.startColor = color;
-                    newLine.endColor = color;
+                    newLine.startColor = Color.green;
+                    newLine.endColor = Color.green;
                     newLine.material = mat;
                     lines.Add(newLine);
                 }
             }
+            
         }
         /*
         // Fonction pour générer le diagramme de Voronoi à partir de la triangulation de Delaunay
@@ -858,7 +862,7 @@ public class LineConstrutor : MonoBehaviour
         */
         /*
         List<SegmentsOld> voronoiSegments = new List<SegmentsOld>();
-        List<Vector2> convexHull = new List<Vector2>();
+        //List<Vector2> convexHull = new List<Vector2>();
 
         // Parcourez chaque triangle de la triangulation de Delaunay
         foreach (var triangle in ListTriangles)
@@ -878,21 +882,50 @@ public class LineConstrutor : MonoBehaviour
                 points1.Add(triangle.Seg3.Point2);
             Vector2 circumcenter = GETCenterCircle(points1[0], points1[1], points1[2]);
             //float circumradius = Vector2.Distance(circumcenter, triangle.Seg1.Point1);
-
-            if ((convexHull.Contains(triangle.Seg1.Point1) && convexHull.Contains(triangle.Seg1.Point2))
-                || (convexHull.Contains(triangle.Seg2.Point1) && convexHull.Contains(triangle.Seg2.Point2)) || 
-                    (convexHull.Contains(triangle.Seg3.Point1) && convexHull.Contains(triangle.Seg3.Point2)))
-            {
-                for
-            }
-            
+/*
             // Ajoutez les segments correspondants au cercle circonscrit
+            if (convexHull.Contains(points1[1]) && convexHull.Contains(points1[2]))
+            {
+                if (!IsObtuseAngle(points1[1], points1[2], points1[0]))
+                {
+                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = -(points1[1] + points1[2]) / 2 });
+                }
+                else
+                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[1] + points1[2]) / 2 });
+            }
+            else
+                voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[1] + points1[2]) / 2 });
+            
+            if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[2]))
+            {
+                if (!IsObtuseAngle(points1[0], points1[2], points1[1]))
+                {
+                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = -(points1[0] + points1[2]) / 2 });
+                }
+                else
+                {
+                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[0] + points1[2]) / 2 });
+                }
+            }
+            else
+                voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[0] + points1[2]) / 2 });
+            
+            if (convexHull.Contains(points1[1]) && convexHull.Contains(points1[0]))
+            {
+                if (!IsObtuseAngle(points1[1], points1[0], points1[2]))
+                {
+                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = -(points1[0] + points1[1]) / 2 });
+                }
+                else
+                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[0] + points1[1]) / 2 });
+            }
+            else
+                voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[1] + points1[0]) / 2 });
             voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (triangle.Seg1.Point1 + triangle.Seg1.Point2) / 2 });
             voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (triangle.Seg2.Point1 + triangle.Seg2.Point2) / 2 });
             voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (triangle.Seg3.Point1 + triangle.Seg3.Point2) / 2 });
         }
-*/
-        /*
+
         foreach (var c in voronoiSegments)
         {
             GameObject newGO = new GameObject();
@@ -909,6 +942,13 @@ public class LineConstrutor : MonoBehaviour
             lines.Add(newLine);
         }*/
         //return voronoiCells;
-
+    }
+    
+    private bool IsObtuseAngle(Vector2 point1, Vector2 point2, Vector2 circumcenter)
+    {
+        Vector2 v1 = point1 - circumcenter;
+        Vector2 v2 = point2 - circumcenter;
+        float dotProduct = Vector2.Dot(v1, v2);
+        return dotProduct < 0;
     }
  }
