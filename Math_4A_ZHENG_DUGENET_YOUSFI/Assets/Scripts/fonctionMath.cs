@@ -90,6 +90,9 @@ public static class FonctionMath
         if (!points.Contains(triangleOld.Seg3.Point2))
             points.Add(triangleOld.Seg3.Point2);
 
+        if (points.Count() < 3)
+            return false;
+
         Vector2 center = GETCenterCircle(points[0], points[1], points[2]);
         float radiusSquared = (triangleOld.Seg1.Point1 - center).sqrMagnitude;
 

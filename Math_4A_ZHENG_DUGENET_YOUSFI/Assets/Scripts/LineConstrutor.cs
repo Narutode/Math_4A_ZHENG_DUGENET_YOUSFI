@@ -75,6 +75,7 @@ public class LineConstrutor : MonoBehaviour
 
     public GameObject clickMenu;
     public GameObject parent;
+    public GameObject voronoiParent;
     public Material mat;
 
     private void Start()
@@ -103,77 +104,7 @@ public class LineConstrutor : MonoBehaviour
             }
 
             if(listPoints.Count >= 3)
-            {/*
-                Face f = new Face() {s1 = listSommet[0], s2=listSommet[1], s3=listSommet[2], arreteAdj = new List<Arete>()};
-                Arete a1 = new Arete();
-                if (listSommet[0].coord.y < listSommet[1].coord.y)
-                {
-                    a1.somBas = listSommet[0];
-                    a1.somHaut = listSommet[1];
-                }
-                else
-                {
-                    a1.somBas = listSommet[1];
-                    a1.somHaut = listSommet[0];
-                }
-
-                if (Vector3.Cross(a1.somBas.coord - a1.somHaut.coord, a1.somBas.coord - listSommet[2].coord).z < 0)
-                {
-                    a1.faceDroite = f;
-                }
-                else
-                {
-                    a1.faceGauche = f;
-                }
-                listArete.Add(a1);
-                
-                
-                Arete a2 = new Arete();
-                if (listSommet[1].coord.y < listSommet[2].coord.y)
-                {
-                    a2.somBas = listSommet[1];
-                    a2.somHaut = listSommet[2];
-                }
-                else
-                {
-                    a2.somBas = listSommet[2];
-                    a2.somHaut = listSommet[1];
-                }
-                if (Vector3.Cross(a1.somBas.coord - a1.somHaut.coord, a1.somBas.coord - listSommet[0].coord).z < 0)
-                {
-                    a2.faceDroite = f;
-                }
-                else
-                {
-                    a2.faceGauche = f;
-                }
-                listArete.Add(a2);
-                
-                Arete a3 = new Arete();
-                if (listSommet[2].coord.y < listSommet[0].coord.y)
-                {
-                    a3.somBas = listSommet[2];
-                    a3.somHaut = listSommet[0];
-                }
-                else
-                {
-                    a3.somBas = listSommet[0];
-                    a3.somHaut = listSommet[2];
-                }
-                if (Vector3.Cross(a1.somBas.coord - a1.somHaut.coord, a1.somBas.coord - listSommet[1].coord).z < 0)
-                {
-                    a3.faceDroite = f;
-                }
-                else
-                {
-                    a3.faceGauche = f;
-                }
-                listArete.Add(a1);
-                f.arreteAdj.Add(a1);
-                f.arreteAdj.Add(a2);
-                f.arreteAdj.Add(a3);
-                */
-                
+            {                
                 //On supprime les segments précédents
                 for (int i = 0; i < parent.transform.childCount; i++)
                 {
@@ -182,83 +113,11 @@ public class LineConstrutor : MonoBehaviour
                         Destroy(go);
                 }
                 lines.Clear();
-                //ListSegments.Clear();
-                //ListTriangles.Clear();
-
-                if(listPoints.Count == 3)
-                {
-                    ListTriangles.Add(new Triangles
-                    {
-                        Seg1 = new Segments { Point1 = listPoints[0], Point2 = listPoints[1] },
-                        Seg2 = new Segments { Point1 = listPoints[1], Point2 = listPoints[2] },
-                        Seg3 = new Segments { Point1 = listPoints[2], Point2 = listPoints[0] },
-                    });
-                }else
-                {
-                    ListTriangles = DelaunayIncremental(ListTriangles, listPoints.Last());
-                }
-
-                foreach (var tri in ListTriangles)
-                {
-                    List<Vector2> points = new List<Vector2>();
-                    points.Add(tri.Seg1.Point1);
-                    if (!points.Contains(tri.Seg1.Point2))
-                        points.Add(tri.Seg1.Point2);
-                    if (!points.Contains(tri.Seg2.Point1))
-                        points.Add(tri.Seg2.Point1);
-                    if (!points.Contains(tri.Seg2.Point2))
-                        points.Add(tri.Seg2.Point2);
-                    if (!points.Contains(tri.Seg3.Point1))
-                        points.Add(tri.Seg3.Point1);
-                    if (!points.Contains(tri.Seg3.Point2))
-                        points.Add(tri.Seg3.Point2);
-
-                    GameObject newGO = new GameObject();
-                    newGO.name = "sides";
-                    newGO.transform.parent = parent.transform;
-                    LineRenderer newLine = newGO.AddComponent<LineRenderer>();
-                    newLine.positionCount = 3;
-                    newLine.SetPosition(0, new Vector3(points[0].x, points[0].y, _nearClipPlaneWorldPoint));
-                    newLine.SetPosition(1, new Vector3(points[1].x, points[1].y, _nearClipPlaneWorldPoint));
-                    newLine.SetPosition(2, new Vector3(points[2].x, points[2].y, _nearClipPlaneWorldPoint));
-                    newLine.startWidth = 0.05f;
-                    newLine.endWidth = 0.05f;
-                    newLine.loop = true;
-                    lines.Add(newLine);
-                }
-
-                //Triangulation();
-                //DelaunayRefinementAlgorithm();
-                
+                ListSegments.Clear();
+                ListTriangles.Clear();
+                Triangulation();
+                DelaunayRefinementAlgorithm();
             }
-            /*
-            else if (listSommet.Count > 3)
-            {
-                //On supprime les segments précédents
-                for (int i = 0; i < parent.transform.childCount; i++)
-                {
-                    var go = parent.transform.GetChild(i).gameObject;
-                    if (go.TryGetComponent<LineRenderer>(out var t))
-                        Destroy(go);
-                }
-                lines.Clear();
-                delaunayDirect(listSommet.Last().coord);
-                foreach (Arete a in listArete)
-                {
-                    GameObject newGO = new GameObject();
-                    newGO.transform.SetParent(parent.transform);
-                    newGO.name = "sides";
-                    LineRenderer newLine = newGO.AddComponent<LineRenderer>();
-                    newLine.positionCount = 2;
-                    newLine.SetPosition(0,
-                        new Vector3(a.somBas.coord.x, a.somBas.coord.y, _nearClipPlaneWorldPoint));
-                    newLine.SetPosition(1,
-                        new Vector3(a.somHaut.coord.x, a.somHaut.coord.y, _nearClipPlaneWorldPoint));
-                    newLine.startWidth = 0.05f;
-                    newLine.endWidth = 0.05f;
-                    lines.Add(newLine);
-                }
-            }*/
         }
         if (Input.GetMouseButtonDown(1))
         {
@@ -276,25 +135,7 @@ public class LineConstrutor : MonoBehaviour
                     clickMenu.SetActive(false);
                 }
             }
-            /*
-            float start = Time.realtimeSinceStartup;
-            //List<Vector2> jarvis = GetJarvis(listPoints);
-            List<Vector2> jarvis = GetGrahamScan(listPoints);
-            float end = Time.realtimeSinceStartup;
-            Timer = end - start;
-            Debug.Log(end-start);
-            int size = jarvis.Count;
-            for (int i = 0; i < size; i++)
-            {
-                GameObject newGO = new GameObject();
-                newGO.name = "sides";
-                LineRenderer newLine = newGO.AddComponent<LineRenderer>();
-                newLine.positionCount = 2;
-                newLine.SetPosition(0,new Vector3(jarvis[i].x,jarvis[i].y, _nearClipPlaneWorldPoint));
-                newLine.SetPosition(1,new Vector3(jarvis[(i+1)%size].x,jarvis[(i+1)%size].y, _nearClipPlaneWorldPoint));
-                lines.Add(newLine);
-            }*/
-        }
+        } 
     }
     
     void delaunayDirect(Vector2 newP)
@@ -368,18 +209,7 @@ public class LineConstrutor : MonoBehaviour
         {
             if (IsPointInsideTriangle(point, triangle))
             {
-                List<Vector2> points = new List<Vector2>();
-                points.Add(triangle.Seg1.Point1);
-                if (!points.Contains(triangle.Seg1.Point2))
-                    points.Add(triangle.Seg1.Point2);
-                if (!points.Contains(triangle.Seg2.Point1))
-                    points.Add(triangle.Seg2.Point1);
-                if (!points.Contains(triangle.Seg2.Point2))
-                    points.Add(triangle.Seg2.Point2);
-                if (!points.Contains(triangle.Seg3.Point1))
-                    points.Add(triangle.Seg3.Point1);
-                if (!points.Contains(triangle.Seg3.Point2))
-                    points.Add(triangle.Seg3.Point2);
+                List<Vector2> points = getPointsFromTriangle(triangle);
 
                 listTri.Remove(triangle);
 
@@ -455,20 +285,10 @@ public class LineConstrutor : MonoBehaviour
             if (matchTri)
                 triangle = triangles.First(t => t.Seg1.Equals(segV) || t.Seg2.Equals(segV) || t.Seg3.Equals(segV));
 
+            // Le point est à l'intérieur du cercle circonscrit on supprime le triangle et on ajoute les deux autres segments à la liste
             if (matchTri && IsPointInsideCircumcircle(point, triangle))
             {
-                List<Vector2> points = new List<Vector2>();
-                points.Add(triangle.Seg1.Point1);
-                if (!points.Contains(triangle.Seg1.Point2))
-                    points.Add(triangle.Seg1.Point2);
-                if (!points.Contains(triangle.Seg2.Point1))
-                    points.Add(triangle.Seg2.Point1);
-                if (!points.Contains(triangle.Seg2.Point2))
-                    points.Add(triangle.Seg2.Point2);
-                if (!points.Contains(triangle.Seg3.Point1))
-                    points.Add(triangle.Seg3.Point1);
-                if (!points.Contains(triangle.Seg3.Point2))
-                    points.Add(triangle.Seg3.Point2);
+                List<Vector2> points = getPointsFromTriangle(triangle);
 
                 if (!triangle.Seg1.Equals(segV))
                     segVisible.Add(triangle.Seg1);
@@ -478,30 +298,6 @@ public class LineConstrutor : MonoBehaviour
                     segVisible.Add(triangle.Seg3);
 
                 triangles.Remove(triangle);
-
-                /*
-                Vector2 oppPoint = points.First(t => !t.Equals(segV.Point1) && !t.Equals(segV.Point2));
-
-                // Le point est à l'intérieur du cercle circonscrit, divisez le triangle en trois
-                newTriangles.Add(new Triangles
-                {
-                    Seg1 = new Segments { Point1 = point, Point2 = oppPoint },
-                    Seg2 = new Segments { Point1 = point, Point2 = segV.Point1 },
-                    Seg3 = new Segments { Point1 = oppPoint, Point2 = segV.Point1 }
-                });
-                segToCheck.Add(newTriangles.Last().Seg1);
-                segToCheck.Add(newTriangles.Last().Seg2);
-                segToCheck.Add(newTriangles.Last().Seg3);
-                newTriangles.Add(new Triangles
-                {
-                    Seg1 = new Segments { Point1 = point, Point2 = oppPoint },
-                    Seg2 = new Segments { Point1 = point, Point2 = segV.Point2 },
-                    Seg3 = new Segments { Point1 = oppPoint, Point2 = segV.Point2 }
-                });
-                segToCheck.Add(newTriangles.Last().Seg1);
-                segToCheck.Add(newTriangles.Last().Seg2);
-                segToCheck.Add(newTriangles.Last().Seg3);
-                */
             }
             else
             {
@@ -614,8 +410,6 @@ public class LineConstrutor : MonoBehaviour
         return t1 is > 0.001 and < .999 && t2 is > 0.001 and < .999;
     }
 
-
-
     public void JarvisMarche()
     {
         float start = Time.realtimeSinceStartup;
@@ -668,6 +462,7 @@ public class LineConstrutor : MonoBehaviour
 
     public void Triangulation()
     {
+        ListTriangles.Clear();
         // Sort the points (assuming ascending order)
         listPoints = listPoints.OrderBy(p => p.x).ThenBy(p => p.y).ToList();
 
@@ -681,10 +476,10 @@ public class LineConstrutor : MonoBehaviour
         ListSegments.Add(new Segments { Point1 = p2, Point2 = p0 });
 
         ListTriangles.Add(new Triangles { Seg1 = ListSegments[0], Seg2 = ListSegments[1], Seg3 = ListSegments[2] });
+        List<Segments> ListSegmentsToAdd = new List<Segments>(ListSegments);
 
         foreach (var curP in listPoints.Skip(3))
         {
-            List<Segments> ListSegmentsToAdd = new List<Segments>(ListSegments);
             foreach (var curSeg in ListSegments)
             {
                 if (isPointVisibleFromSegment(curP, curSeg, ListSegmentsToAdd))
@@ -870,18 +665,7 @@ public class LineConstrutor : MonoBehaviour
             return triangleOld.Seg1.Point1;
         }
 
-        List<Vector2> points = new List<Vector2>();
-        points.Add(triangleOld.Seg1.Point1);
-        if(!points.Contains(triangleOld.Seg1.Point2))
-            points.Add(triangleOld.Seg1.Point2);
-        if(!points.Contains(triangleOld.Seg2.Point1))
-            points.Add(triangleOld.Seg2.Point1);
-        if(!points.Contains(triangleOld.Seg2.Point2))
-            points.Add(triangleOld.Seg2.Point2);
-        if(!points.Contains(triangleOld.Seg3.Point1))
-            points.Add(triangleOld.Seg3.Point1);
-        if(!points.Contains(triangleOld.Seg3.Point2))
-            points.Add(triangleOld.Seg3.Point2);
+        List<Vector2> points = getPointsFromTriangle(triangleOld);
         foreach (var p in points)
         {
             if (commonEdge.Point1 != p && commonEdge.Point2 != p)
@@ -954,45 +738,25 @@ public class LineConstrutor : MonoBehaviour
 
         for (int i = 0; i < ListTriangles.Count; i++)
         {
-            points1.Clear();
-            points1.Add(ListTriangles[i].Seg1.Point1);
-            if (!points1.Contains(ListTriangles[i].Seg1.Point2))
-                points1.Add(ListTriangles[i].Seg1.Point2);
-            if (!points1.Contains(ListTriangles[i].Seg2.Point1))
-                points1.Add(ListTriangles[i].Seg2.Point1);
-            if (!points1.Contains(ListTriangles[i].Seg2.Point2))
-                points1.Add(ListTriangles[i].Seg2.Point2);
-            if (!points1.Contains(ListTriangles[i].Seg3.Point1))
-                points1.Add(ListTriangles[i].Seg3.Point1);
-            if (!points1.Contains(ListTriangles[i].Seg3.Point2))
-                points1.Add(ListTriangles[i].Seg3.Point2);
+            points1 = getPointsFromTriangle(ListTriangles[i]);
+            if (points1.Count < 3)
+                continue;
             center1 = GETCenterCircle(points1[0], points1[1], points1[2]);
 
             //Cas des triangles adjacent
-            for (int j = 0; j < ListTriangles.Count; j++)
+            for (int j = i+1; j < ListTriangles.Count; j++)
             {
-                if(i==j)
-                    continue;
                 Segments commonEdge = FindCommonEdge(ListTriangles[i], ListTriangles[j]);
 
                 if (!float.IsPositiveInfinity(commonEdge.Point1.x))
                 {
-                    points2.Clear();
-                    points2.Add(ListTriangles[i].Seg1.Point1);
-                    if(!points2.Contains(ListTriangles[i].Seg1.Point2))
-                        points2.Add(ListTriangles[i].Seg1.Point2);
-                    if(!points2.Contains(ListTriangles[i].Seg2.Point1))
-                        points2.Add(ListTriangles[i].Seg2.Point1);
-                    if(!points2.Contains(ListTriangles[i].Seg2.Point2))
-                        points2.Add(ListTriangles[i].Seg2.Point2);
-                    if(!points2.Contains(ListTriangles[i].Seg3.Point1))
-                        points2.Add(ListTriangles[i].Seg3.Point1);
-                    if(!points2.Contains(ListTriangles[i].Seg3.Point2))
-                        points2.Add(ListTriangles[i].Seg3.Point2);
+                    points2 = getPointsFromTriangle(ListTriangles[j]);
+                    if (points2.Count < 3)
+                        continue;
                     center2 = GETCenterCircle(points2[0], points2[1], points2[2]);
 
                     GameObject newGO = new GameObject();
-                    newGO.transform.SetParent(parent.transform);
+                    newGO.transform.SetParent(voronoiParent.transform);
                     newGO.name = "sides";
                     LineRenderer newLine = newGO.AddComponent<LineRenderer>();
                     newLine.positionCount = 2;
@@ -1002,8 +766,8 @@ public class LineConstrutor : MonoBehaviour
                         new Vector3(center2.x, center2.y, _nearClipPlaneWorldPoint));
                     newLine.startWidth = 0.05f;
                     newLine.endWidth = 0.05f;
-                    newLine.startColor = Color.green;
-                    newLine.endColor = Color.green;
+                    newLine.startColor = Color.yellow;
+                    newLine.endColor = Color.yellow;
                     newLine.material = mat;
                     lines.Add(newLine);
                 }
@@ -1027,7 +791,7 @@ public class LineConstrutor : MonoBehaviour
                             Vector2 segm = p1 - p2;
                             Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
                             GameObject outGO = new GameObject();
-                            outGO.transform.SetParent(parent.transform);
+                            outGO.transform.SetParent(voronoiParent.transform);
                             outGO.name = "outside";
                             LineRenderer outLine = outGO.AddComponent<LineRenderer>();
                             outLine.positionCount = 2;
@@ -1044,8 +808,24 @@ public class LineConstrutor : MonoBehaviour
                         }
                     }
                 }
-            }
-           
+            }   
         }
+    }
+
+    List<Vector2> getPointsFromTriangle(Triangles tri)
+    {
+        var points2 = new List<Vector2>();
+        points2.Add(tri.Seg1.Point1);
+        if (!points2.Contains(tri.Seg1.Point2))
+            points2.Add(tri.Seg1.Point2);
+        if (!points2.Contains(tri.Seg2.Point1))
+            points2.Add(tri.Seg2.Point1);
+        if (!points2.Contains(tri.Seg2.Point2))
+            points2.Add(tri.Seg2.Point2);
+        if (!points2.Contains(tri.Seg3.Point1))
+            points2.Add(tri.Seg3.Point1);
+        if (!points2.Contains(tri.Seg3.Point2))
+            points2.Add(tri.Seg3.Point2);
+        return points2;
     }
  }
