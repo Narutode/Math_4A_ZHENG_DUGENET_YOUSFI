@@ -25,8 +25,8 @@ public class LineConstructor3D : MonoBehaviour
     public GameObject pointCenter;
     public List<GameObject> listGameObjects;
     public List<Vector3> listPoints;
-    public List<SegmentsOld> ListSegments = new List<SegmentsOld>();
-    public List<TrianglesOld> ListTriangles = new List<TrianglesOld>();
+    public List<Segments> ListSegments = new List<Segments>();
+    public List<Triangles> ListTriangles = new List<Triangles>();
     public List<Tetraedre> ListTetraedre = new List<Tetraedre>();
 
     public List<LineRenderer> lines;

@@ -11,17 +11,17 @@ using Color = UnityEngine.Color;
 //using UnityEngine.EventSystems;
 using static FonctionMath;
 
-public struct SegmentsOld
+public struct Segments
 {
     public Vector2 Point1;
     public Vector2 Point2;
 }
 
-public struct TrianglesOld
+public struct Triangles
 {
-    public SegmentsOld Seg1;
-    public SegmentsOld Seg2;
-    public SegmentsOld Seg3;
+    public Segments Seg1;
+    public Segments Seg2;
+    public Segments Seg3;
     public bool flip;
 }
 
@@ -60,9 +60,9 @@ public class LineConstrutor : MonoBehaviour
     public GameObject pointGO;
     public GameObject pointCenter;
     public List<GameObject> listGameObjects;
-    public List<Vector2> listPoints;
-    public List<SegmentsOld> ListSegments = new List<SegmentsOld>();
-    public List<TrianglesOld> ListTriangles = new List<TrianglesOld>();
+    public List<Vector2> listPoints = new List<Vector2>();
+    public List<Segments> ListSegments = new List<Segments>();
+    public List<Triangles> ListTriangles = new List<Triangles>();
 
     public List<Sommet> listSommet = new List<Sommet>();
     public List<Arete> listArete = new List<Arete>();
@@ -102,7 +102,7 @@ public class LineConstrutor : MonoBehaviour
                 listSommet.Add(new Sommet() {coord = point, arreteAdj = new List<Arete>()});
             }
 
-            if(listSommet.Count >= 3)
+            if(listPoints.Count >= 3)
             {/*
                 Face f = new Face() {s1 = listSommet[0], s2=listSommet[1], s3=listSommet[2], arreteAdj = new List<Arete>()};
                 Arete a1 = new Arete();
@@ -182,11 +182,53 @@ public class LineConstrutor : MonoBehaviour
                         Destroy(go);
                 }
                 lines.Clear();
-                ListSegments.Clear();
-                ListTriangles.Clear();
+                //ListSegments.Clear();
+                //ListTriangles.Clear();
 
-                Triangulation();
-                DelaunayRefinementAlgorithm();
+                if(listPoints.Count == 3)
+                {
+                    ListTriangles.Add(new Triangles
+                    {
+                        Seg1 = new Segments { Point1 = listPoints[0], Point2 = listPoints[1] },
+                        Seg2 = new Segments { Point1 = listPoints[1], Point2 = listPoints[2] },
+                        Seg3 = new Segments { Point1 = listPoints[2], Point2 = listPoints[0] },
+                    });
+                }else
+                {
+                    ListTriangles = DelaunayIncremental(ListTriangles, listPoints.Last());
+                }
+
+                foreach (var tri in ListTriangles)
+                {
+                    List<Vector2> points = new List<Vector2>();
+                    points.Add(tri.Seg1.Point1);
+                    if (!points.Contains(tri.Seg1.Point2))
+                        points.Add(tri.Seg1.Point2);
+                    if (!points.Contains(tri.Seg2.Point1))
+                        points.Add(tri.Seg2.Point1);
+                    if (!points.Contains(tri.Seg2.Point2))
+                        points.Add(tri.Seg2.Point2);
+                    if (!points.Contains(tri.Seg3.Point1))
+                        points.Add(tri.Seg3.Point1);
+                    if (!points.Contains(tri.Seg3.Point2))
+                        points.Add(tri.Seg3.Point2);
+
+                    GameObject newGO = new GameObject();
+                    newGO.name = "sides";
+                    newGO.transform.parent = parent.transform;
+                    LineRenderer newLine = newGO.AddComponent<LineRenderer>();
+                    newLine.positionCount = 3;
+                    newLine.SetPosition(0, new Vector3(points[0].x, points[0].y, _nearClipPlaneWorldPoint));
+                    newLine.SetPosition(1, new Vector3(points[1].x, points[1].y, _nearClipPlaneWorldPoint));
+                    newLine.SetPosition(2, new Vector3(points[2].x, points[2].y, _nearClipPlaneWorldPoint));
+                    newLine.startWidth = 0.05f;
+                    newLine.endWidth = 0.05f;
+                    newLine.loop = true;
+                    lines.Add(newLine);
+                }
+
+                //Triangulation();
+                //DelaunayRefinementAlgorithm();
                 
             }
             /*
@@ -300,11 +342,235 @@ public class LineConstrutor : MonoBehaviour
             }
         }
     }
-    
-    bool isPointVisibleFromSegment(Vector2 point, SegmentsOld seg, List<SegmentsOld> segToCheck)
+
+    List<Triangles> DelaunayIncremental(List<Triangles> listTri, Vector2 point)
+    {
+        List<Triangles> triangles = new List<Triangles>();
+
+        triangles.AddRange(listTri);
+        List<Segments> segVisible = new List<Segments>();
+        List<Segments> segToCheck = new List<Segments>();
+        List<Vector2> convexHull = getJarvis(listPoints);
+
+        foreach (var triangle2 in triangles)
+        {
+            segToCheck.Add(triangle2.Seg1);
+            segToCheck.Add(triangle2.Seg2);
+            segToCheck.Add(triangle2.Seg3);
+        }
+
+        // Liste temporaire pour stocker les nouveaux triangles formés
+        List<Triangles> newTriangles = new List<Triangles>();
+        List<Triangles> visibleTriangles = new List<Triangles>();
+
+        //On cherche les segments visibles
+        foreach (var triangle in triangles)
+        {
+            if (IsPointInsideTriangle(point, triangle))
+            {
+                List<Vector2> points = new List<Vector2>();
+                points.Add(triangle.Seg1.Point1);
+                if (!points.Contains(triangle.Seg1.Point2))
+                    points.Add(triangle.Seg1.Point2);
+                if (!points.Contains(triangle.Seg2.Point1))
+                    points.Add(triangle.Seg2.Point1);
+                if (!points.Contains(triangle.Seg2.Point2))
+                    points.Add(triangle.Seg2.Point2);
+                if (!points.Contains(triangle.Seg3.Point1))
+                    points.Add(triangle.Seg3.Point1);
+                if (!points.Contains(triangle.Seg3.Point2))
+                    points.Add(triangle.Seg3.Point2);
+
+                listTri.Remove(triangle);
+
+                // Le point est à l'intérieur d'un triangle
+                newTriangles.Add(new Triangles
+                {
+                    Seg1 = new Segments { Point1 = point, Point2 = points[0] },
+                    Seg2 = new Segments { Point1 = point, Point2 = points[1] },
+                    Seg3 = new Segments { Point1 = points[0], Point2 = points[1] }
+                });
+                segToCheck.Add(newTriangles.Last().Seg1);
+                segToCheck.Add(newTriangles.Last().Seg2);
+                segToCheck.Add(newTriangles.Last().Seg3);
+                newTriangles.Add(new Triangles
+                {
+                    Seg1 = new Segments { Point1 = point, Point2 = points[1] },
+                    Seg2 = new Segments { Point1 = point, Point2 = points[2] },
+                    Seg3 = new Segments { Point1 = points[1], Point2 = points[2] }
+                });
+                segToCheck.Add(newTriangles.Last().Seg1);
+                segToCheck.Add(newTriangles.Last().Seg2);
+                segToCheck.Add(newTriangles.Last().Seg3);
+                newTriangles.Add(new Triangles
+                {
+                    Seg1 = new Segments { Point1 = point, Point2 = points[2] },
+                    Seg2 = new Segments { Point1 = point, Point2 = points[0] },
+                    Seg3 = new Segments { Point1 = points[2], Point2 = points[0] }
+                });
+                segToCheck.Add(newTriangles.Last().Seg1);
+                segToCheck.Add(newTriangles.Last().Seg2);
+                segToCheck.Add(newTriangles.Last().Seg3);
+
+                return listTri;
+            }
+            bool visible = false;
+            if (isPointVisibleFromSegment(point, triangle.Seg1, segToCheck))
+            {
+                if(!segVisible.Any(t => (t.Point1.Equals(triangle.Seg1.Point1) || t.Point1.Equals(triangle.Seg1.Point2)) &&
+                    (t.Point2.Equals(triangle.Seg1.Point1) || t.Point2.Equals(triangle.Seg1.Point2)))) {
+                    segVisible.Add(triangle.Seg1);
+                    visible = true;
+                }
+            }
+            if (isPointVisibleFromSegment(point, triangle.Seg2, segToCheck))
+            {
+                if (!segVisible.Any(t => (t.Point1.Equals(triangle.Seg2.Point1) || t.Point1.Equals(triangle.Seg2.Point2)) &&
+                    (t.Point2.Equals(triangle.Seg2.Point1) || t.Point2.Equals(triangle.Seg2.Point2))))
+                {
+                    segVisible.Add(triangle.Seg2);
+                    visible = true;
+                }
+            }
+            if (isPointVisibleFromSegment(point, triangle.Seg3, segToCheck))
+            {
+                if (!segVisible.Any(t => (t.Point1.Equals(triangle.Seg3.Point1) || t.Point1.Equals(triangle.Seg3.Point2)) &&
+                     (t.Point2.Equals(triangle.Seg3.Point1) || t.Point2.Equals(triangle.Seg3.Point2))))
+                {
+                    segVisible.Add(triangle.Seg3);
+                    visible = true;
+                }
+            }
+            if(!visible)
+            {
+                newTriangles.Add(triangle);
+            }
+        }
+        while(segVisible.Count > 0)
+        {
+            var segV = segVisible.First();
+            segVisible.Remove(segV);
+            bool matchTri = triangles.Any(t => t.Seg1.Equals(segV) || t.Seg2.Equals(segV) || t.Seg3.Equals(segV));
+            Triangles triangle = new Triangles();
+            if (matchTri)
+                triangle = triangles.First(t => t.Seg1.Equals(segV) || t.Seg2.Equals(segV) || t.Seg3.Equals(segV));
+
+            if (matchTri && IsPointInsideCircumcircle(point, triangle))
+            {
+                List<Vector2> points = new List<Vector2>();
+                points.Add(triangle.Seg1.Point1);
+                if (!points.Contains(triangle.Seg1.Point2))
+                    points.Add(triangle.Seg1.Point2);
+                if (!points.Contains(triangle.Seg2.Point1))
+                    points.Add(triangle.Seg2.Point1);
+                if (!points.Contains(triangle.Seg2.Point2))
+                    points.Add(triangle.Seg2.Point2);
+                if (!points.Contains(triangle.Seg3.Point1))
+                    points.Add(triangle.Seg3.Point1);
+                if (!points.Contains(triangle.Seg3.Point2))
+                    points.Add(triangle.Seg3.Point2);
+
+                if (!triangle.Seg1.Equals(segV))
+                    segVisible.Add(triangle.Seg1);
+                if (!triangle.Seg2.Equals(segV))
+                    segVisible.Add(triangle.Seg2);
+                if (!triangle.Seg3.Equals(segV))
+                    segVisible.Add(triangle.Seg3);
+
+                triangles.Remove(triangle);
+
+                /*
+                Vector2 oppPoint = points.First(t => !t.Equals(segV.Point1) && !t.Equals(segV.Point2));
+
+                // Le point est à l'intérieur du cercle circonscrit, divisez le triangle en trois
+                newTriangles.Add(new Triangles
+                {
+                    Seg1 = new Segments { Point1 = point, Point2 = oppPoint },
+                    Seg2 = new Segments { Point1 = point, Point2 = segV.Point1 },
+                    Seg3 = new Segments { Point1 = oppPoint, Point2 = segV.Point1 }
+                });
+                segToCheck.Add(newTriangles.Last().Seg1);
+                segToCheck.Add(newTriangles.Last().Seg2);
+                segToCheck.Add(newTriangles.Last().Seg3);
+                newTriangles.Add(new Triangles
+                {
+                    Seg1 = new Segments { Point1 = point, Point2 = oppPoint },
+                    Seg2 = new Segments { Point1 = point, Point2 = segV.Point2 },
+                    Seg3 = new Segments { Point1 = oppPoint, Point2 = segV.Point2 }
+                });
+                segToCheck.Add(newTriangles.Last().Seg1);
+                segToCheck.Add(newTriangles.Last().Seg2);
+                segToCheck.Add(newTriangles.Last().Seg3);
+                */
+            }
+            else
+            {
+                // Le point n'est pas à l'intérieur du cercle circonscrit
+                if(matchTri)
+                    newTriangles.Add(triangle);
+
+                newTriangles.Add(new Triangles
+                {
+                    Seg1 = new Segments { Point1 = point, Point2 = segV.Point1 },
+                    Seg2 = new Segments { Point1 = point, Point2 = segV.Point2 },
+                    Seg3 = new Segments { Point1 = segV.Point1, Point2 = segV.Point2 },
+                });
+                segToCheck.Add(newTriangles.Last().Seg1);
+                segToCheck.Add(newTriangles.Last().Seg2);
+                segToCheck.Add(newTriangles.Last().Seg3);
+            }
+        }
+
+        return newTriangles;
+    }
+
+    bool IsPointInsideTriangle(Vector2 point, Triangles triangle)
+    {
+        float sign1 = Sign(point, triangle.Seg1.Point1, triangle.Seg1.Point2);
+        float sign2 = Sign(point, triangle.Seg2.Point1, triangle.Seg2.Point2);
+        float sign3 = Sign(point, triangle.Seg3.Point1, triangle.Seg3.Point2);
+
+        return !((sign1 >= 0 || sign2 >= 0 || sign3 >= 0) && (sign1 <= 0 || sign2 <= 0 || sign3 <= 0));
+    }
+
+    bool IsPointVisibleFromSegment(Vector2 point, Segments segment)
+    {
+        Vector2 AB = segment.Point2 - segment.Point1;
+        Vector2 AP = point - segment.Point1;
+
+        float crossProduct = Vector3.Cross(new Vector3(AB.x, AB.y, 0), new Vector3(AP.x, AP.y, 0)).z;
+
+        // Vérifiez si le point est à gauche du segment (produit vectoriel positif)
+        return crossProduct >= 0;
+    }
+
+    float Sign(Vector2 p1, Vector2 p2, Vector2 p3)
+    {
+        return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+    }
+
+    bool IsPointVisibleFromTriangle(Vector2 point, Triangles triangle)
+    {
+        // Vérifiez si le point est à l'extérieur du triangle en utilisant la méthode du produit vectoriel
+        Vector2 AB = triangle.Seg1.Point2 - triangle.Seg1.Point1;
+        Vector2 BC = triangle.Seg2.Point2 - triangle.Seg2.Point1;
+        Vector2 CA = triangle.Seg3.Point2 - triangle.Seg3.Point1;
+
+        Vector2 AP = point - triangle.Seg1.Point1;
+        Vector2 BP = point - triangle.Seg2.Point1;
+        Vector2 CP = point - triangle.Seg3.Point1;
+
+        float crossABP = Vector3.Cross(new Vector3(AB.x, AB.y, 0), new Vector3(AP.x, AP.y, 0)).z;
+        float crossBCP = Vector3.Cross(new Vector3(BC.x, BC.y, 0), new Vector3(BP.x, BP.y, 0)).z;
+        float crossCAP = Vector3.Cross(new Vector3(CA.x, CA.y, 0), new Vector3(CP.x, CP.y, 0)).z;
+
+        return (crossABP >= 0 && crossBCP >= 0 && crossCAP >= 0) || (crossABP <= 0 && crossBCP <= 0 && crossCAP <= 0);
+    }
+
+    bool isPointVisibleFromSegment(Vector2 point, Segments seg, List<Segments> segToCheck)
     {
         Vector2 midPoint = (seg.Point1 + seg.Point2)/2f;
-        SegmentsOld tmpSeg = new SegmentsOld{Point1 = midPoint, Point2 = point};
+        Segments tmpSeg = new Segments{Point1 = midPoint, Point2 = point};
         foreach (var curSeg in segToCheck)
         {
             if (DoSegmentsIntersect(tmpSeg, curSeg))
@@ -316,10 +582,10 @@ public class LineConstrutor : MonoBehaviour
     bool isPointVisibleFromArete(Vector2 point, Arete seg, List<Arete> segToCheck)
     {
         Vector2 midPoint = (seg.somBas.coord + seg.somHaut.coord)/2f;
-        SegmentsOld tmpSeg = new SegmentsOld{Point1 = midPoint, Point2 = point};
+        Segments tmpSeg = new Segments{Point1 = midPoint, Point2 = point};
         foreach (var curAr in segToCheck)
         {
-            SegmentsOld curSeg = new SegmentsOld() {Point1 = curAr.somBas.coord, Point2 = curAr.somHaut.coord};
+            Segments curSeg = new Segments() {Point1 = curAr.somBas.coord, Point2 = curAr.somHaut.coord};
             if (DoSegmentsIntersect(tmpSeg, curSeg))
                 return false;
         }
@@ -327,7 +593,7 @@ public class LineConstrutor : MonoBehaviour
     }
     
     // Fonction pour vérifier si deux segments se croisent
-    bool DoSegmentsIntersect(SegmentsOld segment1, SegmentsOld segment2)
+    bool DoSegmentsIntersect(Segments segment1, Segments segment2)
     {
         double dx1 = segment1.Point2.x - segment1.Point1.x;
         double dy1 = segment1.Point2.y - segment1.Point1.y;
@@ -345,7 +611,7 @@ public class LineConstrutor : MonoBehaviour
         double t1 = ((segment2.Point1.x - segment1.Point1.x) * dy2 - (segment2.Point1.y - segment1.Point1.y) * dx2) / delta;
         double t2 = ((segment2.Point1.x - segment1.Point1.x) * dy1 - (segment2.Point1.y - segment1.Point1.y) * dx1) / delta;
 
-        return t1 is > 0.01 and < .99 && t2 is > 0.01 and < .99;
+        return t1 is > 0.001 and < .999 && t2 is > 0.001 and < .999;
     }
 
 
@@ -410,24 +676,24 @@ public class LineConstrutor : MonoBehaviour
         Vector2 p1 = listPoints.Skip(1).First();
         Vector2 p2 = listPoints.Skip(2).First();
 
-        ListSegments.Add(new SegmentsOld { Point1 = p0, Point2 = p1 });
-        ListSegments.Add(new SegmentsOld { Point1 = p1, Point2 = p2 });
-        ListSegments.Add(new SegmentsOld { Point1 = p2, Point2 = p0 });
+        ListSegments.Add(new Segments { Point1 = p0, Point2 = p1 });
+        ListSegments.Add(new Segments { Point1 = p1, Point2 = p2 });
+        ListSegments.Add(new Segments { Point1 = p2, Point2 = p0 });
 
-        ListTriangles.Add(new TrianglesOld { Seg1 = ListSegments[0], Seg2 = ListSegments[1], Seg3 = ListSegments[2] });
+        ListTriangles.Add(new Triangles { Seg1 = ListSegments[0], Seg2 = ListSegments[1], Seg3 = ListSegments[2] });
 
         foreach (var curP in listPoints.Skip(3))
         {
-            List<SegmentsOld> ListSegmentsToAdd = new List<SegmentsOld>(ListSegments);
+            List<Segments> ListSegmentsToAdd = new List<Segments>(ListSegments);
             foreach (var curSeg in ListSegments)
             {
                 if (isPointVisibleFromSegment(curP, curSeg, ListSegmentsToAdd))
                 {
-                    SegmentsOld newSeg1 = new SegmentsOld { Point1 = curP, Point2 = curSeg.Point1 };
-                    SegmentsOld newSeg2 = new SegmentsOld { Point1 = curP, Point2 = curSeg.Point2 };
+                    Segments newSeg1 = new Segments { Point1 = curP, Point2 = curSeg.Point1 };
+                    Segments newSeg2 = new Segments { Point1 = curP, Point2 = curSeg.Point2 };
                     ListSegmentsToAdd.Add(newSeg1);
                     ListSegmentsToAdd.Add(newSeg2);
-                    ListTriangles.Add(new TrianglesOld { Seg1 = curSeg, Seg2 = newSeg1, Seg3 = newSeg2 });
+                    ListTriangles.Add(new Triangles { Seg1 = curSeg, Seg2 = newSeg1, Seg3 = newSeg2 });
                 }
             }
             ListSegments.Clear();
@@ -490,7 +756,7 @@ public class LineConstrutor : MonoBehaviour
             {
                 for (int j = i+1; j < ListTriangles.Count; j++)
                 {
-                    if (TryFlipEdge(ListTriangles[i], ListTriangles[j], out TrianglesOld newTriangle1, out TrianglesOld newTriangle2))
+                    if (TryFlipEdge(ListTriangles[i], ListTriangles[j], out Triangles newTriangle1, out Triangles newTriangle2))
                     {
                         // Le flip d'arête est possible, remplacez les triangles existants par les nouveaux
                         newTriangle1.flip = true;
@@ -537,10 +803,10 @@ public class LineConstrutor : MonoBehaviour
     }
     
     // Fonction pour essayer de faire un flip d'arête entre deux triangles
-    private bool TryFlipEdge(TrianglesOld triangle1, TrianglesOld triangle2, out TrianglesOld newTriangle1, out TrianglesOld newTriangle2)
+    private bool TryFlipEdge(Triangles triangle1, Triangles triangle2, out Triangles newTriangle1, out Triangles newTriangle2)
     {
         // Recherchez une arête commune entre les deux triangles
-        SegmentsOld commonEdge = FindCommonEdge(triangle1, triangle2);
+        Segments commonEdge = FindCommonEdge(triangle1, triangle2);
 
         if (!float.IsPositiveInfinity(commonEdge.Point1.x))
         {
@@ -551,18 +817,18 @@ public class LineConstrutor : MonoBehaviour
             if (IsPointInsideCircumcircle(oppositePoint2, triangle1) || IsPointInsideCircumcircle(oppositePoint1, triangle2))
             {
                 // Effectuez le flip d'arête
-                newTriangle1 = new TrianglesOld
+                newTriangle1 = new Triangles
                 {
-                    Seg1 = new SegmentsOld { Point1 = commonEdge.Point1, Point2 = oppositePoint2 },
-                    Seg2 = new SegmentsOld { Point1 = oppositePoint1, Point2 = commonEdge.Point1 },
-                    Seg3 = new SegmentsOld { Point1 = oppositePoint2, Point2 = oppositePoint1 }
+                    Seg1 = new Segments { Point1 = commonEdge.Point1, Point2 = oppositePoint2 },
+                    Seg2 = new Segments { Point1 = oppositePoint1, Point2 = commonEdge.Point1 },
+                    Seg3 = new Segments { Point1 = oppositePoint2, Point2 = oppositePoint1 }
                 };
 
-                newTriangle2 = new TrianglesOld
+                newTriangle2 = new Triangles
                 {
-                    Seg1 = new SegmentsOld { Point1 = commonEdge.Point2, Point2 = oppositePoint1 },
-                    Seg2 = new SegmentsOld { Point1 = oppositePoint2, Point2 = commonEdge.Point2 },
-                    Seg3 = new SegmentsOld { Point1 = oppositePoint1, Point2 = oppositePoint2 }
+                    Seg1 = new Segments { Point1 = commonEdge.Point2, Point2 = oppositePoint1 },
+                    Seg2 = new Segments { Point1 = oppositePoint2, Point2 = commonEdge.Point2 },
+                    Seg3 = new Segments { Point1 = oppositePoint1, Point2 = oppositePoint2 }
                 };
 
                 return true;
@@ -576,10 +842,10 @@ public class LineConstrutor : MonoBehaviour
     }
 
     // Fonction pour trouver une arête commune entre deux triangles
-    private SegmentsOld FindCommonEdge(TrianglesOld triangle1, TrianglesOld triangle2)
+    private Segments FindCommonEdge(Triangles triangle1, Triangles triangle2)
     {
-        List<SegmentsOld> edges1 = new List<SegmentsOld> { triangle1.Seg1, triangle1.Seg2, triangle1.Seg3 };
-        List<SegmentsOld> edges2 = new List<SegmentsOld> { triangle2.Seg1, triangle2.Seg2, triangle2.Seg3 };
+        List<Segments> edges1 = new List<Segments> { triangle1.Seg1, triangle1.Seg2, triangle1.Seg3 };
+        List<Segments> edges2 = new List<Segments> { triangle2.Seg1, triangle2.Seg2, triangle2.Seg3 };
 
         foreach (var edge1 in edges1)
         {
@@ -592,11 +858,11 @@ public class LineConstrutor : MonoBehaviour
             }
         }
 
-        return new SegmentsOld() {Point1 = Vector2.positiveInfinity, Point2 = Vector2.positiveInfinity}; // Pas d'arête commune trouvée
+        return new Segments() {Point1 = Vector2.positiveInfinity, Point2 = Vector2.positiveInfinity}; // Pas d'arête commune trouvée
     }
     
     // Fonction pour trouver le point opposé à une arête dans un triangle
-    private Vector2 FindOppositePoint(TrianglesOld triangleOld, SegmentsOld commonEdge)
+    private Vector2 FindOppositePoint(Triangles triangleOld, Segments commonEdge)
     {
         if (!TriangleContainsEdge(triangleOld, commonEdge))
         {
@@ -626,14 +892,14 @@ public class LineConstrutor : MonoBehaviour
     }
 
     // Fonction pour vérifier si deux arêtes sont égales
-    private bool AreEdgesEqual(SegmentsOld edge1, SegmentsOld edge2)
+    private bool AreEdgesEqual(Segments edge1, Segments edge2)
     {
         return (edge1.Point1 == edge2.Point1 && edge1.Point2 == edge2.Point2) ||
                (edge1.Point1 == edge2.Point2 && edge1.Point2 == edge2.Point1);
     }
     
     // Fonction pour vérifier si un triangle contient une arête
-    private bool TriangleContainsEdge(TrianglesOld triangleOld, SegmentsOld edge)
+    private bool TriangleContainsEdge(Triangles triangleOld, Segments edge)
     {
         return AreEdgesEqual(triangleOld.Seg1, edge) || AreEdgesEqual(triangleOld.Seg2, edge) || AreEdgesEqual(triangleOld.Seg3, edge);
     }
@@ -679,119 +945,52 @@ public class LineConstrutor : MonoBehaviour
     {
         Color color = Color.green;
         List<Vector2> convexHull = getJarvis(listPoints);
-        Debug.Log(convexHull.Count);
+        Vector3 center1, center2;
+        foreach(var c in convexHull)
+            Debug.Log(c);
         //pour chaque segment cheque si triangle adjacent (sinon check angle)
+        List<Vector2> points1 = new List<Vector2>();
+        List<Vector2> points2 = new List<Vector2>();
+
         for (int i = 0; i < ListTriangles.Count; i++)
         {
+            points1.Clear();
+            points1.Add(ListTriangles[i].Seg1.Point1);
+            if (!points1.Contains(ListTriangles[i].Seg1.Point2))
+                points1.Add(ListTriangles[i].Seg1.Point2);
+            if (!points1.Contains(ListTriangles[i].Seg2.Point1))
+                points1.Add(ListTriangles[i].Seg2.Point1);
+            if (!points1.Contains(ListTriangles[i].Seg2.Point2))
+                points1.Add(ListTriangles[i].Seg2.Point2);
+            if (!points1.Contains(ListTriangles[i].Seg3.Point1))
+                points1.Add(ListTriangles[i].Seg3.Point1);
+            if (!points1.Contains(ListTriangles[i].Seg3.Point2))
+                points1.Add(ListTriangles[i].Seg3.Point2);
+            center1 = GETCenterCircle(points1[0], points1[1], points1[2]);
+
+            //Cas des triangles adjacent
             for (int j = 0; j < ListTriangles.Count; j++)
             {
                 if(i==j)
                     continue;
-                SegmentsOld commonEdge = FindCommonEdge(ListTriangles[i], ListTriangles[j]);
+                Segments commonEdge = FindCommonEdge(ListTriangles[i], ListTriangles[j]);
 
                 if (!float.IsPositiveInfinity(commonEdge.Point1.x))
                 {
-                    List<Vector2> points1 = new List<Vector2>();
-                    points1.Add(ListTriangles[i].Seg1.Point1);
-                    if(!points1.Contains(ListTriangles[i].Seg1.Point2))
-                        points1.Add(ListTriangles[i].Seg1.Point2);
-                    if(!points1.Contains(ListTriangles[i].Seg2.Point1))
-                        points1.Add(ListTriangles[i].Seg2.Point1);
-                    if(!points1.Contains(ListTriangles[i].Seg2.Point2))
-                        points1.Add(ListTriangles[i].Seg2.Point2);
-                    if(!points1.Contains(ListTriangles[i].Seg3.Point1))
-                        points1.Add(ListTriangles[i].Seg3.Point1);
-                    if(!points1.Contains(ListTriangles[i].Seg3.Point2))
-                        points1.Add(ListTriangles[i].Seg3.Point2);
-                    var center1 = GETCenterCircle(points1[0],points1[1],points1[2]);
-                    /*
-                    if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[1]))
-                    {
-                        Debug.Log("test");
-                        if (!IsObtuseAngle(points1[0], points1[1], points1[2]))
-                        {
-                            Vector2 segm = points1[0] - points1[1];
-                            Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
-                            GameObject outGO = new GameObject();
-                            outGO.transform.SetParent(parent.transform);
-                            outGO.name = "outside";
-                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
-                            outLine.positionCount = 2;
-                            outLine.SetPosition(0,
-                                new Vector3(center1.x, center1.y, _nearClipPlaneWorldPoint));
-                            outLine.SetPosition(1,
-                                new Vector3(center1.x+norm.x, center1.y+norm.y, _nearClipPlaneWorldPoint));
-                            outLine.startWidth = 0.05f;
-                            outLine.endWidth = 0.05f;
-                            outLine.startColor = Color.yellow;
-                            outLine.endColor = Color.yellow;
-                            outLine.material = mat;
-                            lines.Add(outLine);
-                        }
-                    } 
-                    if (convexHull.Contains(points1[1]) && convexHull.Contains(points1[2]))
-                    {
-                        Debug.Log("test");
-                        if (!IsObtuseAngle(points1[1], points1[2], points1[0]))
-                        {
-                            Vector2 segm = points1[1] - points1[2];
-                            Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
-                            GameObject outGO = new GameObject();
-                            outGO.transform.SetParent(parent.transform);
-                            outGO.name = "outside";
-                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
-                            outLine.positionCount = 2;
-                            outLine.SetPosition(0,
-                                new Vector3(center1.x+norm.x, center1.y+norm.y, _nearClipPlaneWorldPoint));
-                            outLine.SetPosition(1,
-                                new Vector3(center1.x, center1.y, _nearClipPlaneWorldPoint));
-                            outLine.startWidth = 0.05f;
-                            outLine.endWidth = 0.05f;
-                            outLine.startColor = Color.red;
-                            outLine.endColor = Color.red;
-                            outLine.material = mat;
-                            lines.Add(outLine);
-                        }
-                    }
-                    if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[2]))
-                    {
-                        Debug.Log("test");
-                        if (!IsObtuseAngle(points1[0], points1[2], points1[1]))
-                        {
-                            Vector2 segm = points1[0] - points1[2];
-                            Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
-                            GameObject outGO = new GameObject();
-                            outGO.transform.SetParent(parent.transform);
-                            outGO.name = "outside";
-                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
-                            outLine.positionCount = 2;
-                            outLine.SetPosition(0,
-                                new Vector3(center1.x+norm.x, center1.y+norm.y, _nearClipPlaneWorldPoint));
-                            outLine.SetPosition(1,
-                                new Vector3(center1.x, center1.y, _nearClipPlaneWorldPoint));
-                            outLine.startWidth = 0.05f;
-                            outLine.endWidth = 0.05f;
-                            outLine.startColor = Color.blue;
-                            outLine.endColor = Color.blue;
-                            outLine.material = mat;
-                            lines.Add(outLine);
-                        }
-                    }*/
-                    
-                    points1.Clear();
-                    points1.Add(ListTriangles[j].Seg1.Point1);
-                    if(!points1.Contains(ListTriangles[j].Seg1.Point2))
-                        points1.Add(ListTriangles[j].Seg1.Point2);
-                    if(!points1.Contains(ListTriangles[j].Seg2.Point1))
-                        points1.Add(ListTriangles[j].Seg2.Point1);
-                    if(!points1.Contains(ListTriangles[j].Seg2.Point2))
-                        points1.Add(ListTriangles[j].Seg2.Point2);
-                    if(!points1.Contains(ListTriangles[j].Seg3.Point1))
-                        points1.Add(ListTriangles[j].Seg3.Point1);
-                    if(!points1.Contains(ListTriangles[j].Seg3.Point2))
-                        points1.Add(ListTriangles[j].Seg3.Point2);
-                    var center2 = GETCenterCircle(points1[0],points1[1],points1[2]);
-                    
+                    points2.Clear();
+                    points2.Add(ListTriangles[i].Seg1.Point1);
+                    if(!points2.Contains(ListTriangles[i].Seg1.Point2))
+                        points2.Add(ListTriangles[i].Seg1.Point2);
+                    if(!points2.Contains(ListTriangles[i].Seg2.Point1))
+                        points2.Add(ListTriangles[i].Seg2.Point1);
+                    if(!points2.Contains(ListTriangles[i].Seg2.Point2))
+                        points2.Add(ListTriangles[i].Seg2.Point2);
+                    if(!points2.Contains(ListTriangles[i].Seg3.Point1))
+                        points2.Add(ListTriangles[i].Seg3.Point1);
+                    if(!points2.Contains(ListTriangles[i].Seg3.Point2))
+                        points2.Add(ListTriangles[i].Seg3.Point2);
+                    center2 = GETCenterCircle(points2[0], points2[1], points2[2]);
+
                     GameObject newGO = new GameObject();
                     newGO.transform.SetParent(parent.transform);
                     newGO.name = "sides";
@@ -809,146 +1008,44 @@ public class LineConstrutor : MonoBehaviour
                     lines.Add(newLine);
                 }
             }
-            
+
+            //Cas adjacent à l'enveloppe convexe
+            if (convexHull.Contains(points1[0]) || convexHull.Contains(points1[1]) || convexHull.Contains(points1[2]))
+            {
+                Vector2 p1, p2, p3;
+                int sizeMax = convexHull.Count;
+                for (int c = 0; c < sizeMax; c++)
+                {
+                    if (points1.Any(t => t.Equals(convexHull[c])))
+                    {
+                        p1 = points1.First(t => t.Equals(convexHull[c]));
+                        if(points1.Any(t => t.Equals(convexHull[(c + 1) % sizeMax])))
+                        {
+                            p2 = points1.First(t => t.Equals(convexHull[(c + 1) % sizeMax]));
+                            p3 = points1.First(t => !t.Equals(p1) && !t.Equals(p2));
+                           
+                            Vector2 segm = p1 - p2;
+                            Vector2 norm = new Vector2(-segm.y, segm.x) * 10;
+                            GameObject outGO = new GameObject();
+                            outGO.transform.SetParent(parent.transform);
+                            outGO.name = "outside";
+                            LineRenderer outLine = outGO.AddComponent<LineRenderer>();
+                            outLine.positionCount = 2;
+                            outLine.SetPosition(0,
+                                new Vector3(center1.x, center1.y, _nearClipPlaneWorldPoint));
+                            outLine.SetPosition(1,
+                                new Vector3(center1.x + norm.x, center1.y + norm.y, _nearClipPlaneWorldPoint));
+                            outLine.startWidth = 0.05f;
+                            outLine.endWidth = 0.05f;
+                            outLine.startColor = Color.yellow;
+                            outLine.endColor = Color.yellow;
+                            outLine.material = mat;
+                            lines.Add(outLine);                         
+                        }
+                    }
+                }
+            }
+           
         }
-        /*
-        // Fonction pour générer le diagramme de Voronoi à partir de la triangulation de Delaunay
-        List<Vector2> points = listPoints;
-        // Initialisez les cellules du diagramme de Voronoi
-        List<Cell> voronoiCells = new List<Cell>();
-        for (int i = 0; i < points.Count; i++)
-        {
-            voronoiCells.Add(new Cell { Site = points[i], Vertices = new List<Vector2>() });
-        }
-
-        // Parcourez chaque triangle de la triangulation de Delaunay
-        foreach (var triangle in ListTriangles)
-        {
-            // Trouvez le cercle circonscrit du triangle (centre et rayon)
-            List<Vector2> points1 = new List<Vector2>();
-            points1.Add(triangle.Seg1.Point1);
-            if(!points1.Contains(triangle.Seg1.Point2))
-                points1.Add(triangle.Seg1.Point2);
-            if(!points1.Contains(triangle.Seg2.Point1))
-                points1.Add(triangle.Seg2.Point1);
-            if(!points1.Contains(triangle.Seg2.Point2))
-                points1.Add(triangle.Seg2.Point2);
-            if(!points1.Contains(triangle.Seg3.Point1))
-                points1.Add(triangle.Seg3.Point1);
-            if(!points1.Contains(triangle.Seg3.Point2))
-                points1.Add(triangle.Seg3.Point2);
-            Vector2 circumcenter = GETCenterCircle(points1[0],points1[1],points1[2]);
-            float circumradius = Vector2.Distance(circumcenter, triangle.Seg1.Point1);
-
-            // Trouvez l'index du site correspondant au cercle circonscrit
-            int siteIndex = -1;
-            for (int i = 0; i < points.Count; i++)
-            {
-                if (Vector2.Distance(points[i], circumcenter) < circumradius * 1.01f) // Tolerance pour éviter les erreurs d'arrondi
-                {
-                    siteIndex = i;
-                    break;
-                }
-            }
-
-            // Si le cercle circonscrit correspond à un site, ajoutez les vertices de la cellule
-            if (siteIndex != -1)
-            {
-                voronoiCells[siteIndex].Vertices.Add(triangle.Seg1.Point1);
-                voronoiCells[siteIndex].Vertices.Add(triangle.Seg2.Point1);
-                voronoiCells[siteIndex].Vertices.Add(triangle.Seg3.Point1);
-            }
-        }
-        */
-        /*
-        List<SegmentsOld> voronoiSegments = new List<SegmentsOld>();
-        //List<Vector2> convexHull = new List<Vector2>();
-
-        // Parcourez chaque triangle de la triangulation de Delaunay
-        foreach (var triangle in ListTriangles)
-        {
-            // Trouvez le cercle circonscrit du triangle (centre et rayon)
-            List<Vector2> points1 = new List<Vector2>();
-            points1.Add(triangle.Seg1.Point1);
-            if (!points1.Contains(triangle.Seg1.Point2))
-                points1.Add(triangle.Seg1.Point2);
-            if (!points1.Contains(triangle.Seg2.Point1))
-                points1.Add(triangle.Seg2.Point1);
-            if (!points1.Contains(triangle.Seg2.Point2))
-                points1.Add(triangle.Seg2.Point2);
-            if (!points1.Contains(triangle.Seg3.Point1))
-                points1.Add(triangle.Seg3.Point1);
-            if (!points1.Contains(triangle.Seg3.Point2))
-                points1.Add(triangle.Seg3.Point2);
-            Vector2 circumcenter = GETCenterCircle(points1[0], points1[1], points1[2]);
-            //float circumradius = Vector2.Distance(circumcenter, triangle.Seg1.Point1);
-/*
-            // Ajoutez les segments correspondants au cercle circonscrit
-            if (convexHull.Contains(points1[1]) && convexHull.Contains(points1[2]))
-            {
-                if (!IsObtuseAngle(points1[1], points1[2], points1[0]))
-                {
-                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = -(points1[1] + points1[2]) / 2 });
-                }
-                else
-                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[1] + points1[2]) / 2 });
-            }
-            else
-                voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[1] + points1[2]) / 2 });
-            
-            if (convexHull.Contains(points1[0]) && convexHull.Contains(points1[2]))
-            {
-                if (!IsObtuseAngle(points1[0], points1[2], points1[1]))
-                {
-                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = -(points1[0] + points1[2]) / 2 });
-                }
-                else
-                {
-                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[0] + points1[2]) / 2 });
-                }
-            }
-            else
-                voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[0] + points1[2]) / 2 });
-            
-            if (convexHull.Contains(points1[1]) && convexHull.Contains(points1[0]))
-            {
-                if (!IsObtuseAngle(points1[1], points1[0], points1[2]))
-                {
-                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = -(points1[0] + points1[1]) / 2 });
-                }
-                else
-                    voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[0] + points1[1]) / 2 });
-            }
-            else
-                voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (points1[1] + points1[0]) / 2 });
-            voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (triangle.Seg1.Point1 + triangle.Seg1.Point2) / 2 });
-            voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (triangle.Seg2.Point1 + triangle.Seg2.Point2) / 2 });
-            voronoiSegments.Add(new SegmentsOld { Point1 = circumcenter, Point2 = (triangle.Seg3.Point1 + triangle.Seg3.Point2) / 2 });
-        }
-
-        foreach (var c in voronoiSegments)
-        {
-            GameObject newGO = new GameObject();
-            newGO.transform.SetParent(parent.transform);
-            newGO.name = "sides";
-            LineRenderer newLine = newGO.AddComponent<LineRenderer>();
-            newLine.positionCount = 2;
-            newLine.SetPosition(0,
-                new Vector3(c.Point1.x, c.Point1.y, _nearClipPlaneWorldPoint));
-            newLine.SetPosition(1,
-                new Vector3(c.Point2.x, c.Point2.y, _nearClipPlaneWorldPoint));
-            newLine.startWidth = 0.05f;
-            newLine.endWidth = 0.05f;
-            lines.Add(newLine);
-        }*/
-        //return voronoiCells;
-    }
-    
-    private bool IsObtuseAngle(Vector2 point1, Vector2 point2, Vector2 circumcenter)
-    {
-        Vector2 v1 = point1 - circumcenter;
-        Vector2 v2 = point2 - circumcenter;
-        float dotProduct = Vector2.Dot(v1, v2);
-        return dotProduct < 0;
     }
  }

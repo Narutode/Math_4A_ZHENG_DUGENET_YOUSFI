@@ -75,9 +75,22 @@ public static class FonctionMath
         return res;
     }
 
-    public static bool IsPointInsideCircumcircle(Vector2 point, TrianglesOld triangleOld)
+    public static bool IsPointInsideCircumcircle(Vector2 point, Triangles triangleOld)
     {
-        Vector2 center = GETCenterCircle(triangleOld.Seg1.Point1, triangleOld.Seg2.Point1, triangleOld.Seg3.Point1);
+        List<Vector2> points = new List<Vector2>();
+        points.Add(triangleOld.Seg1.Point1);
+        if (!points.Contains(triangleOld.Seg1.Point2))
+            points.Add(triangleOld.Seg1.Point2);
+        if (!points.Contains(triangleOld.Seg2.Point1))
+            points.Add(triangleOld.Seg2.Point1);
+        if (!points.Contains(triangleOld.Seg2.Point2))
+            points.Add(triangleOld.Seg2.Point2);
+        if (!points.Contains(triangleOld.Seg3.Point1))
+            points.Add(triangleOld.Seg3.Point1);
+        if (!points.Contains(triangleOld.Seg3.Point2))
+            points.Add(triangleOld.Seg3.Point2);
+
+        Vector2 center = GETCenterCircle(points[0], points[1], points[2]);
         float radiusSquared = (triangleOld.Seg1.Point1 - center).sqrMagnitude;
 
         return (point - center).sqrMagnitude < radiusSquared;
