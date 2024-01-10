@@ -333,14 +333,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1931e67b12a565f4fb8b733d21aa0ca5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointGO: {fileID: 3107938435906345459, guid: 147d9b589a0472845a2adc1338b4c09b, type: 3}
-  pointCenter: {fileID: 0}
-  listGameObjects: []
-  listPoints: []
-  lines: []
-  nbPoints: 10
-  clickMenu: {fileID: 468226723}
+  pointPrefab: {fileID: 3107938435906345459, guid: 147d9b589a0472845a2adc1338b4c09b, type: 3}
   parent: {fileID: 162977640}
+  points: []
+  lines: []
 --- !u!1 &437332839
 GameObject:
   m_ObjectHideFlags: 0
@@ -361,7 +357,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &437332840
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1467,7 +1463,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1302024920
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1810,7 +1806,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1427722531
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1984,7 +1980,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1524574585
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2348,7 +2344,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 435747843}
         m_TargetAssemblyTypeName: LineConstructor3D, Assembly-CSharp
-        m_MethodName: placePoint
+        m_MethodName: GeneratePoints
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2589,7 +2585,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Graham Scan
+  m_text: 'Enveloppe Convexe '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3101,7 +3097,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 435747843}
         m_TargetAssemblyTypeName: LineConstructor3D, Assembly-CSharp
-        m_MethodName: DrawHull
+        m_MethodName: DrawConvexHull
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
