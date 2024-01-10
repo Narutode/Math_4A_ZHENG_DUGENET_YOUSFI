@@ -8,14 +8,6 @@ public class LineConstructor3D : MonoBehaviour
     public List<Vector3> points;
     public List<LineRenderer> lines;
 
-    /*
-    void Start()
-    {
-        GeneratePoints(20); // Vous pouvez ajuster le nombre de points selon vos besoins
-        DrawConvexHull();
-    }
-    */
-
    public  void GeneratePoints()
     {
         points.Clear();
@@ -87,6 +79,12 @@ public class LineConstructor3D : MonoBehaviour
     private static Vector3 FindLowestPoint(List<Vector3> pointList)
     {
 
+        if(pointList == null || pointList.Count == 0)
+        {
+            Debug.LogError("pointList is null or empty.");
+            //return Vector3.zero;
+        }
+
         Vector3 lowestPoint = pointList[0];
 
 
@@ -144,6 +142,8 @@ public class LineConstructor3D : MonoBehaviour
 
     private static bool IsPointInsideConvexHull(Vector3 point, List<Tetrahedron> convexHullTriangles)
     {
+        if (convexHullTriangles == null) return false;
+
         foreach (var triangle in convexHullTriangles)
         {
             if (IsPointInTriangle3D(point, triangle))
