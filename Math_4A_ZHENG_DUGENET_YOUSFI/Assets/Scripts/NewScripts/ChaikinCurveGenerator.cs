@@ -5,16 +5,15 @@ using UnityEngine;
 
 public class ChaikinCurveGenerator : MonoBehaviour
 {
-    public List<Vector3> ControlPoints;
+    public List<Vector3>[] ControlPoints;
     public int Iterations = 4;
     [Range(0.0f, 1.0f)]
-    public float QPercentage = 0.75f;
+    public float U = 0.25f;
     [Range(0.0f, 1.0f)]
-    public float RPercentage = 0.75f;
-
+    public float V = 0.75f;
     private CoonsLineConstrutor lineConstructor;
 
-    LineRenderer line;
+    LineRenderer[] lines = new LineRenderer[4];
     public Material mat;
     public GameObject pointGO;
 
@@ -23,15 +22,18 @@ public class ChaikinCurveGenerator : MonoBehaviour
     private void Start()
     {
         lineConstructor = gameObject.GetComponent<CoonsLineConstrutor>();
-        
-        GameObject newGO = new GameObject();
-        newGO.transform.SetParent(lineConstructor.parent.transform);
-        newGO.name = "sides";
-        line = newGO.AddComponent<LineRenderer>();
-        line.startWidth = 0.1f;
-        line.endWidth = 0.1f;
-        line.positionCount = 0;
-        line.material = mat;
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject newGO = new GameObject();
+            newGO.transform.SetParent(lineConstructor.parent.transform);
+            newGO.name = "sides";
+            var line = newGO.AddComponent<LineRenderer>();
+            line.startWidth = 0.1f;
+            line.endWidth = 0.1f;
+            line.positionCount = 0;
+            line.material = mat;
+            lines[i] = line;
+        }
     }
 
     public void Update()
@@ -42,12 +44,15 @@ public class ChaikinCurveGenerator : MonoBehaviour
 
     public void Subdivide()
     {
-        List<Vector3> points = new List<Vector3>(ControlPoints);
-        for (int i = 0; i < Iterations; i++)
+        for (int i = 0; i < 4; i++)
         {
-            points = ChaikinSubdivision(points, QPercentage, RPercentage);
+            List<Vector3> points = new List<Vector3>(ControlPoints[i]);
+            for (int k = 0; k < Iterations; k++)
+            {
+                points = ChaikinSubdivision(points, 1 - U, V);
+            }
+            DrawCurve(points, i);
         }
-        DrawCurve(points);
     }
 
     List<Vector3> ChaikinSubdivision(List<Vector3> points , float qPercent, float rPercent)
@@ -65,13 +70,13 @@ public class ChaikinCurveGenerator : MonoBehaviour
         return newPoints;
     }
 
-    void DrawCurve(List<Vector3> points)
+    void DrawCurve(List<Vector3> points, int index)
     {
         for (int i = 0; i < points.Count; i++)
         {
-            if(i+1 > line.positionCount)
-                line.positionCount++;
-            line.SetPosition(i, points[i]);
+            if(i+1 > lines[index].positionCount)
+                lines[index].positionCount++;
+            lines[index].SetPosition(i, points[i]);
         }
     }
 }
