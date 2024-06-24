@@ -11,7 +11,7 @@ using Color = UnityEngine.Color;
 //using UnityEngine.EventSystems;
 using static FonctionMath;
 
-public struct coons
+public struct coonsStruct
 {
     public List<Vector3> listPoints;
     public List<GameObject> listGameObjects;
@@ -40,14 +40,14 @@ public class CoonsLineConstrutor : MonoBehaviour
 
     public Material[] mat = new Material[4];
 
-    public coons[] coonsTab = new coons[4];
+    public coonsStruct[] coonsTab = new coonsStruct[4];
 
     private void Start()
     {
         _nearClipPlaneWorldPoint = cam.nearClipPlane + 1f;
         for (int i = 0; i < 4; i++)
         {
-            coonsTab[i] = new coons();
+            coonsTab[i] = new coonsStruct();
             coonsTab[i].listGameObjects = new List<GameObject>();
             coonsTab[i].listPoints = new List<Vector3>();
             coonsTab[i].mat = mat[i];
@@ -131,5 +131,15 @@ public class CoonsLineConstrutor : MonoBehaviour
     {
         index=(index+1)%4;
         clickMenu.SetActive(false);
+    }
+
+    public void GenerateCoons()
+    {
+        CoonsPatchGenerator coons = gameObject.GetComponent<CoonsPatchGenerator>();
+        coons.CurveU0 = coonsTab[0].listPoints;
+        coons.CurveU1 = coonsTab[2].listPoints;
+        coons.CurveV0 = coonsTab[1].listPoints;
+        coons.CurveV1 = coonsTab[3].listPoints;
+        coons.GenerateCoonsPatch();
     }
 }

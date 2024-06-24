@@ -31,7 +31,7 @@ public class CoonsSubdivisionMerger : MonoBehaviour
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
 
-        int resolution = coonsPatchGenerator.Resolution;
+        int resolution = coonsPatchGenerator.ResolutionU;
 
         for (int i = 0; i < resolution; i++)
         {

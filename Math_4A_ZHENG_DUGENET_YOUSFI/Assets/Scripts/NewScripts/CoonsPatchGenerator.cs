@@ -7,23 +7,36 @@ public class CoonsPatchGenerator : MonoBehaviour
     public List<Vector3> CurveU1;
     public List<Vector3> CurveV0;
     public List<Vector3> CurveV1;
-    public int Resolution = 10;
+    public int ResolutionU;
+    public int ResolutionV;
+    public GameObject parent;
 
     void Start()
     {
         GenerateCoonsPatch();
     }
 
-    void GenerateCoonsPatch()
+    public void GenerateCoonsPatch()
     {
-        for (int i = 0; i < Resolution; i++)
+        ResolutionU = CurveU0.Count;
+        ResolutionV = CurveV0.Count;
+        for (int i = 0; i < ResolutionU; i++)
         {
-            for (int j = 0; j < Resolution; j++)
+            GameObject newGO = new GameObject();
+            newGO.transform.SetParent(parent.transform);
+            newGO.name = "coons " + i;
+            var line = newGO.AddComponent<LineRenderer>();
+            line.startWidth = 0.1f;
+            line.endWidth = 0.1f;
+            line.positionCount = ResolutionV;
+            //line.material = mat;
+            for (int j = 0; j < ResolutionV; j++)
             {
-                float u = i / (float)(Resolution - 1);
-                float v = j / (float)(Resolution - 1);
+                float u = i / (float)(ResolutionU - 1);
+                float v = j / (float)(ResolutionV - 1);
                 Vector3 point = CoonsPatch(u, v);
-                Debug.DrawLine(point, point + Vector3.up * 0.1f, Color.blue, 100f);
+                line.SetPosition(j, point);
+                //Debug.DrawLine(point, point + Vector3.up * 0.1f, Color.blue, 100f);
             }
         }
     }
