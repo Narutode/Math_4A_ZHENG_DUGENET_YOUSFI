@@ -42,7 +42,7 @@ public class CoonsLineConstrutor : MonoBehaviour
         line.startWidth = 0.1f;
         line.endWidth = 0.1f;
         line.positionCount = 0;
-        line.materials[0] = mat;
+        line.material = mat;
     }
 
     // Update is called once per frame
@@ -103,7 +103,8 @@ public class CoonsLineConstrutor : MonoBehaviour
     public void GenerateChaikinCurve()
     {
         ChaikinCurveGenerator chGen = gameObject.GetComponent<ChaikinCurveGenerator>();
-        chGen.ControlPoints = listPoints; 
-        chGen.Subdivide();
+        chGen.ControlPoints = listPoints;
+        chGen.drawChaikin = true;
+        //chGen.Subdivide();
     }
 }

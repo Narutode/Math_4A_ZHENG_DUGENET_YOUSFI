@@ -18,10 +18,11 @@ public class ChaikinCurveGenerator : MonoBehaviour
     public Material mat;
     public GameObject pointGO;
 
+    public bool drawChaikin = false;
+
     private void Start()
     {
         lineConstructor = gameObject.GetComponent<CoonsLineConstrutor>();
-        line= lineConstructor.line;
         
         GameObject newGO = new GameObject();
         newGO.transform.SetParent(lineConstructor.parent.transform);
@@ -30,7 +31,13 @@ public class ChaikinCurveGenerator : MonoBehaviour
         line.startWidth = 0.1f;
         line.endWidth = 0.1f;
         line.positionCount = 0;
-        line.materials[0] = mat;
+        line.material = mat;
+    }
+
+    public void Update()
+    {
+        if (drawChaikin)
+            Subdivide();
     }
 
     public void Subdivide()
@@ -60,12 +67,11 @@ public class ChaikinCurveGenerator : MonoBehaviour
 
     void DrawCurve(List<Vector3> points)
     {
-        for (int i = 0; i < points.Count - 1; i++)
+        for (int i = 0; i < points.Count; i++)
         {
-            //Debug.DrawLine(points[i], points[i + 1], Color.red, 100f);
-            GameObject newP = Instantiate(pointGO);
+            if(i+1 > line.positionCount)
+                line.positionCount++;
             line.SetPosition(i, points[i]);
-            line.positionCount++;
         }
     }
 }
