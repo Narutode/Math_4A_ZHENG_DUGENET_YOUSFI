@@ -18,7 +18,7 @@ public class CoonsLineConstrutor : MonoBehaviour
     [FormerlySerializedAs("Line")] public LineRenderer curLine;
     public GameObject pointGO;
     public List<GameObject> listGameObjects;
-    public List<Vector2> listPoints = new List<Vector2>();
+    public List<Vector3> listPoints = new List<Vector3>();
     public List<Segments> ListSegments = new List<Segments>();
     public List<Triangles> ListTriangles = new List<Triangles>();
 
@@ -98,5 +98,12 @@ public class CoonsLineConstrutor : MonoBehaviour
             Destroy(parent.transform.GetChild(i).gameObject);
         }
         clickMenu.SetActive(false);
+    }
+
+    public void GenerateChaikinCurve()
+    {
+        ChaikinCurveGenerator chGen = gameObject.GetComponent<ChaikinCurveGenerator>();
+        chGen.ControlPoints = listPoints; 
+        chGen.Subdivide();
     }
 }
