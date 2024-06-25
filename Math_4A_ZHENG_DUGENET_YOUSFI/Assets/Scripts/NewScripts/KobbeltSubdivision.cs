@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class KobbeltSubdivision : MonoBehaviour
@@ -8,8 +9,8 @@ public class KobbeltSubdivision : MonoBehaviour
     private Mesh meshcopy;
     void Start()
     {
-        Mesh mesh = meshFilter.mesh;
-        meshcopy = mesh;
+        meshcopy = CreateCube();
+
         for (int i = 0; i < subdivisions; i++)
         {
             meshcopy = Subdivide(meshcopy);
@@ -109,5 +110,66 @@ public class KobbeltSubdivision : MonoBehaviour
         {
             adjacencyList[vertex].Add(adjacentVertex);
         }
+    }
+
+    Mesh CreateCube()
+    {
+        Mesh mesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = mesh;
+
+        // Define the 8 vertices of the cube
+        Vector3[] vertices = {
+            new Vector3(-0.5f, -0.5f, 0.5f),  // 0
+            new Vector3(0.5f, -0.5f, 0.5f),   // 1
+            new Vector3(0.5f, 0.5f, 0.5f),    // 2
+            new Vector3(-0.5f, 0.5f, 0.5f),   // 3
+            new Vector3(-0.5f, -0.5f, -0.5f), // 4
+            new Vector3(0.5f, -0.5f, -0.5f),  // 5
+            new Vector3(0.5f, 0.5f, -0.5f),   // 6
+            new Vector3(-0.5f, 0.5f, -0.5f)   // 7
+        };
+
+        // Define the 12 triangles (2 per face)
+        int[] triangles = {
+            // Front face
+            0, 1, 2,
+            0, 2, 3,
+            // Back face
+            4, 6, 5,
+            4, 7, 6,
+            // Left face
+            4, 5, 1,
+            4, 1, 0,
+            // Right face
+            1, 5, 6,
+            1, 6, 2,
+            // Top face
+            2, 6, 7,
+            2, 7, 3,
+            // Bottom face
+            4, 0, 3,
+            4, 3, 7
+        };
+
+        // Define the UVs (optional, for texturing)
+        Vector2[] uvs = {
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1),
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1)
+        };
+
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.uv = uvs;
+
+        // Recalculate normals for proper lighting
+        mesh.RecalculateNormals();
+
+        return mesh;
     }
 }
