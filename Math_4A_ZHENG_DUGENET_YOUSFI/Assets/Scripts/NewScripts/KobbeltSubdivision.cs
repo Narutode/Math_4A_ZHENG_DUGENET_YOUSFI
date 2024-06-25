@@ -4,15 +4,23 @@ using UnityEngine;
 public class KobbeltSubdivision : MonoBehaviour
 {
     public MeshFilter meshFilter;
-
+    public int subdivisions = 1;
+    private Mesh meshcopy;
     void Start()
     {
         Mesh mesh = meshFilter.mesh;
-        for (int i = 0; i < 3; i++)
+        meshcopy = mesh;
+        for (int i = 0; i < subdivisions; i++)
         {
-            mesh = Subdivide(mesh);
+            meshcopy = Subdivide(meshcopy);
+            perturb(meshcopy);
         }
-        meshFilter.mesh = mesh;
+
+        MeshFilter meshFilterthis = GetComponent<MeshFilter>();
+        meshFilterthis.mesh = meshcopy;
+        
+        MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+        meshRenderer.material = meshFilter.GetComponent<MeshRenderer>().sharedMaterial;
     }
 
     public Mesh Subdivide(Mesh mesh)
@@ -44,5 +52,62 @@ public class KobbeltSubdivision : MonoBehaviour
         mesh.triangles = newTriangles.ToArray();
         mesh.RecalculateNormals();
         return mesh;
+    }
+
+    void perturb(Mesh mesh)
+    {
+        Vector3[] vertex = new Vector3[mesh.vertices.Length];
+        var adjDict = FindAdjacentVertices(mesh);
+        for(int i = 0; i < mesh.vertices.Length; i++)
+        {
+            var adj = adjDict[i];
+            float n = adj.Count;
+            var curP = mesh.vertices[i];
+            Vector3 sum = Vector3.zero;
+            foreach (var index in adj)
+            {
+                sum += mesh.vertices[index];
+            }
+            var alpha = (1.0f / 9.0f) * (4.0f - 2.0f * Mathf.Cos(2.0f * Mathf.PI / n));
+            Vector3 vPrime = (1 - alpha) * curP + (alpha / n) * sum;
+            vertex[i] = vPrime;
+        }
+
+        mesh.vertices = vertex;
+        mesh.RecalculateNormals();
+    }
+
+    Dictionary<int, List<int>> FindAdjacentVertices(Mesh mesh)
+    {
+        Dictionary<int, List<int>> adjacencyList = new Dictionary<int, List<int>>();
+
+        int[] triangles = mesh.triangles;
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            int v0 = triangles[i];
+            int v1 = triangles[i + 1];
+            int v2 = triangles[i + 2];
+
+            AddAdjacentVertex(adjacencyList, v0, v1);
+            AddAdjacentVertex(adjacencyList, v0, v2);
+            AddAdjacentVertex(adjacencyList, v1, v0);
+            AddAdjacentVertex(adjacencyList, v1, v2);
+            AddAdjacentVertex(adjacencyList, v2, v0);
+            AddAdjacentVertex(adjacencyList, v2, v1);
+        }
+
+        return adjacencyList;
+    }
+
+    void AddAdjacentVertex(Dictionary<int, List<int>> adjacencyList, int vertex, int adjacentVertex)
+    {
+        if (!adjacencyList.ContainsKey(vertex))
+        {
+            adjacencyList[vertex] = new List<int>();
+        }
+        if (!adjacencyList[vertex].Contains(adjacentVertex))
+        {
+            adjacencyList[vertex].Add(adjacentVertex);
+        }
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 public class CatmullClarkSubdivision : MonoBehaviour
 {
     public MeshFilter originalMeshFilter;
-    public int subdivisions = 1; // Nombre de subdivisions à effectuer
+    public int subdivisions = 1;
 
     void Start()
     {
