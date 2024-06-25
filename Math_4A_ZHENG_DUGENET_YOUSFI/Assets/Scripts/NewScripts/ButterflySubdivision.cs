@@ -63,8 +63,6 @@ public class ButterflySubdivision : MonoBehaviour
 
     Vector3 ButterflyEdgeVertex(int v0, int v1, Vector3[] vertices)
     {
-        // Calcul du point selon la méthode Butterfly
-        // Ce n'est qu'un exemple, les poids doivent être calculés correctement pour l'algorithme Butterfly
         return (vertices[v0] + vertices[v1]) / 2;
     }
 

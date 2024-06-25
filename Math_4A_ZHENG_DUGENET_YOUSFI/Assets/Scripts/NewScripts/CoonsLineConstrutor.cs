@@ -1,15 +1,7 @@
-using System;
-using System.Collections;
+
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
-using Color = UnityEngine.Color;
-//using UnityEngine.EventSystems;
-using static FonctionMath;
+
 
 public struct coonsStruct
 {
@@ -31,7 +23,7 @@ public class CoonsLineConstrutor : MonoBehaviour
     public List<LineRenderer> lines;
     private float _nearClipPlaneWorldPoint = 0;
 
-    [SerializeField]public static float Timer;
+    public static float Timer;
 
     public GameObject clickMenu;
     public GameObject parent;
