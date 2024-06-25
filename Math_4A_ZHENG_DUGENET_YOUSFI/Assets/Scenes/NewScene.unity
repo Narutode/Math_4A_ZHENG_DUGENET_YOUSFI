@@ -159,6 +159,7 @@ MonoBehaviour:
   ResolutionU: 0
   ResolutionV: 0
   parent: {fileID: 0}
+  pointGO: {fileID: 0}
 --- !u!4 &7189246
 Transform:
   m_ObjectHideFlags: 0
@@ -15099,7 +15100,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d570591b74cbb1478e74acf5604c853, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Iterations: 2
+  Iterations: 4
   U: 0.25
   V: 0.75
   mat: {fileID: 2100000, guid: bc59a643128858e46a51109df4b6eda2, type: 2}
@@ -15124,3 +15125,4 @@ MonoBehaviour:
   ResolutionU: 0
   ResolutionV: 0
   parent: {fileID: 882614652}
+  pointGO: {fileID: 3107938435906345459, guid: 147d9b589a0472845a2adc1338b4c09b, type: 3}

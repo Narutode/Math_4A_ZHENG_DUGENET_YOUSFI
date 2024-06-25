@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection;
 using UnityEngine;
 
 public class ChaikinCurveGenerator : MonoBehaviour
@@ -42,8 +43,9 @@ public class ChaikinCurveGenerator : MonoBehaviour
             Subdivide();
     }
 
-    public void Subdivide()
+    public List<Vector3>[] Subdivide()
     {
+        List<Vector3>[] sub = new List<Vector3>[4];
         for (int i = 0; i < 4; i++)
         {
             List<Vector3> points = new List<Vector3>(ControlPoints[i]);
@@ -52,7 +54,9 @@ public class ChaikinCurveGenerator : MonoBehaviour
                 points = ChaikinSubdivision(points, 1 - U, V);
             }
             DrawCurve(points, i);
+            sub[i] = points;
         }
+        return sub;
     }
 
     List<Vector3> ChaikinSubdivision(List<Vector3> points , float qPercent, float rPercent)
