@@ -14,7 +14,7 @@ public class KobbeltSubdivision : MonoBehaviour
         for (int i = 0; i < subdivisions; i++)
         {
             meshcopy = Subdivide(meshcopy);
-            perturb(meshcopy);
+            //perturb(meshcopy);
         }
 
         MeshFilter meshFilterthis = GetComponent<MeshFilter>();
@@ -26,9 +26,10 @@ public class KobbeltSubdivision : MonoBehaviour
 
     public Mesh Subdivide(Mesh mesh)
     {
-        // L'algorithme de subdivision de Kobbelt
         List<Vector3> newVertices = new List<Vector3>(mesh.vertices);
         List<int> newTriangles = new List<int>();
+
+        Dictionary<int, List<int>> adjDict = FindAdjacentTriangles(mesh);
 
         for (int i = 0; i < mesh.triangles.Length; i += 3)
         {
@@ -40,19 +41,94 @@ public class KobbeltSubdivision : MonoBehaviour
             Vector3 p1 = mesh.vertices[v1];
             Vector3 p2 = mesh.vertices[v2];
 
-            Vector3 m0 = (p0 + p1 + p2) / 3.0f;
-            newVertices.Add(m0);
-            int m0Index = newVertices.Count - 1;
+            Vector3 barycenter = (p0 + p1 + p2) / 3.0f;
+            newVertices.Add(barycenter);
+            int barycenterIndex = newVertices.Count - 1;
 
-            newTriangles.AddRange(new int[] { v0, v1, m0Index });
-            newTriangles.AddRange(new int[] { v1, v2, m0Index });
-            newTriangles.AddRange(new int[] { v2, v0, m0Index });
+            // Create new triangles from the current triangle
+            //newTriangles.AddRange(new int[] { v0, v1, barycenterIndex });
+            //newTriangles.AddRange(new int[] { v1, v2, barycenterIndex });
+            //newTriangles.AddRange(new int[] { v2, v0, barycenterIndex });
+
+            // Find adjacent triangles and create new triangles between barycenters
+            foreach (var adjacentIndex in adjDict[i / 3])
+            {
+                int av0 = mesh.triangles[adjacentIndex * 3];
+                int av1 = mesh.triangles[adjacentIndex * 3 + 1];
+                int av2 = mesh.triangles[adjacentIndex * 3 + 2];
+
+                Vector3 ap0 = mesh.vertices[av0];
+                Vector3 ap1 = mesh.vertices[av1];
+                Vector3 ap2 = mesh.vertices[av2];
+
+                var pointList = new List<int>() { av0, av1, av2 };
+
+                Vector3 adjacentBarycenter = (ap0 + ap1 + ap2) / 3.0f;
+                int adjacentBarycenterIndex = newVertices.IndexOf(adjacentBarycenter);
+                if (adjacentBarycenterIndex == -1)
+                {
+                    newVertices.Add(adjacentBarycenter);
+                    adjacentBarycenterIndex = newVertices.Count - 1;
+                }
+
+                if (pointList.Contains(v0))
+                    newTriangles.AddRange(new int[] { barycenterIndex, adjacentBarycenterIndex, v0 });
+                if (pointList.Contains(v1))
+                    newTriangles.AddRange(new int[] { barycenterIndex, adjacentBarycenterIndex, v1 });
+                if (pointList.Contains(v2))
+                    newTriangles.AddRange(new int[] { barycenterIndex, adjacentBarycenterIndex, v2 });
+            }
         }
 
         mesh.vertices = newVertices.ToArray();
         mesh.triangles = newTriangles.ToArray();
         mesh.RecalculateNormals();
         return mesh;
+    }
+
+    Dictionary<int, List<int>> FindAdjacentTriangles(Mesh mesh)
+    {
+        Dictionary<int, List<int>> adjacencyList = new Dictionary<int, List<int>>();
+
+        int[] triangles = mesh.triangles;
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            int v0 = triangles[i];
+            int v1 = triangles[i + 1];
+            int v2 = triangles[i + 2];
+
+            AddAdjacentTriangle(adjacencyList, i / 3, v0, v1);
+            AddAdjacentTriangle(adjacencyList, i / 3, v1, v2);
+            AddAdjacentTriangle(adjacencyList, i / 3, v2, v0);
+        }
+
+        return adjacencyList;
+    }
+
+    void AddAdjacentTriangle(Dictionary<int, List<int>> adjacencyList, int triangleIndex, int v0, int v1)
+    {
+        foreach (var kvp in adjacencyList)
+        {
+            if (kvp.Value.Contains(v0) && kvp.Value.Contains(v1))
+            {
+                adjacencyList[kvp.Key].Add(triangleIndex);
+                if (adjacencyList.ContainsKey(triangleIndex))
+                    adjacencyList[triangleIndex].Add(kvp.Key);
+                else
+                {
+                    adjacencyList[triangleIndex] = new List<int>();
+                    adjacencyList[triangleIndex].Add(kvp.Key);
+                }
+                return;
+            }
+        }
+
+        if (!adjacencyList.ContainsKey(triangleIndex))
+        {
+            adjacencyList[triangleIndex] = new List<int>();
+        }
+        adjacencyList[triangleIndex].Add(v0);
+        adjacencyList[triangleIndex].Add(v1);
     }
 
     void perturb(Mesh mesh)

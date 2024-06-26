@@ -8153,7 +8153,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshFilter: {fileID: 491669761}
-  subdivisions: 6
+  subdivisions: 1
 --- !u!1 &1018693027
 GameObject:
   m_ObjectHideFlags: 0
