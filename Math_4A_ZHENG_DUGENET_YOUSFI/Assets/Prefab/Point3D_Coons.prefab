@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3107938435906345453}
   - component: {fileID: 3107938435906345458}
   m_Layer: 0
-  m_Name: Point3D
+  m_Name: Point3D_Coons
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 3107938435906345459}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -4.3248734, y: 5.7258883, z: 8.299988}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -62,7 +62,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: bc59a643128858e46a51109df4b6eda2, type: 2}
+  - {fileID: 2100000, guid: c1b16feeb8d6cbe4c8424dbb283eed74, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

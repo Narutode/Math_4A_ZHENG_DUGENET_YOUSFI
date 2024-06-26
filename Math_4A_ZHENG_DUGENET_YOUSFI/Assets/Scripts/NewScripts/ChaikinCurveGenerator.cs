@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -49,6 +50,8 @@ public class ChaikinCurveGenerator : MonoBehaviour
         for (int i = 0; i < 4; i++)
         {
             List<Vector3> points = new List<Vector3>(ControlPoints[i]);
+            if (points.Count == 0)
+                continue;
             for (int k = 0; k < Iterations; k++)
             {
                 points = ChaikinSubdivision(points, 1 - U, V);
@@ -62,6 +65,7 @@ public class ChaikinCurveGenerator : MonoBehaviour
     List<Vector3> ChaikinSubdivision(List<Vector3> points , float qPercent, float rPercent)
     {
         List<Vector3> newPoints = new List<Vector3>();
+        newPoints.Add(points[0]);
         for (int i = 0; i < points.Count - 1; i++)
         {
             Vector3 P0 = points[i];
@@ -71,6 +75,7 @@ public class ChaikinCurveGenerator : MonoBehaviour
             newPoints.Add(Q);
             newPoints.Add(R);
         }
+        newPoints.Add(points.Last());
         return newPoints;
     }
 
