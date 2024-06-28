@@ -113,19 +113,7 @@ public class KobbeltSubdivision : MonoBehaviour
 
         return mesh;
     }
-
-    int GetOrCreateMidpoint(List<Vector3> vertices, Dictionary<Edge, int> edgeMidpointDict, int v0, int v1,
-        Vector3 midpoint)
-    {
-        Edge edge = new Edge(v0, v1);
-        if (!edgeMidpointDict.ContainsKey(edge))
-        {
-            edgeMidpointDict[edge] = vertices.Count;
-            vertices.Add(midpoint);
-        }
-
-        return edgeMidpointDict[edge];
-    }
+    
 
     Dictionary<int, List<int>> FindAdjacentTriangles(Mesh mesh)
     {
