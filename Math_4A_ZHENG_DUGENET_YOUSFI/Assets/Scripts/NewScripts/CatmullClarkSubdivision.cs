@@ -9,12 +9,13 @@ public class CatmullClarkSubdivision : MonoBehaviour
 
     void Start()
     {
-        Mesh originalMesh = originalMeshFilter.mesh;
+        Mesh originalMesh = CreateCube();
 
         for (int i = 0; i < subdivisions; i++)
         {
             originalMesh = SubdivideMesh(originalMesh);
         }
+        originalMesh.RecalculateNormals();
 
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         if (meshFilter == null)
@@ -33,123 +34,284 @@ public class CatmullClarkSubdivision : MonoBehaviour
 
     Mesh SubdivideMesh(Mesh mesh)
     {
-        List<Vector3> vertices = new List<Vector3>(mesh.vertices);
-        List<Vector3> newVertices = new List<Vector3>();
-        List<Vector3> facePoints = new List<Vector3>();
-        Dictionary<Edge, Vector3> edgePoints = new Dictionary<Edge, Vector3>();
-        Dictionary<int, List<int>> vertexNeighborMap = new Dictionary<int, List<int>>();
-
+        Vector3[] vertices = mesh.vertices;
         int[] triangles = mesh.triangles;
+
+        // Step 1: Compute all face points
+        Dictionary<int, Vector3> facePoints = new Dictionary<int, Vector3>();
         for (int i = 0; i < triangles.Length; i += 3)
         {
-            int v0 = triangles[i];
-            int v1 = triangles[i + 1];
-            int v2 = triangles[i + 2];
-
-            Vector3 facePoint = (vertices[v0] + vertices[v1] + vertices[v2]) / 3f;
-            facePoints.Add(facePoint);
-
-            AddNeighbor(vertexNeighborMap, v0, v1);
-            AddNeighbor(vertexNeighborMap, v0, v2);
-            AddNeighbor(vertexNeighborMap, v1, v0);
-            AddNeighbor(vertexNeighborMap, v1, v2);
-            AddNeighbor(vertexNeighborMap, v2, v0);
-            AddNeighbor(vertexNeighborMap, v2, v1);
-
-            Edge edge1 = new Edge(v0, v1);
-            Edge edge2 = new Edge(v1, v2);
-            Edge edge3 = new Edge(v2, v0);
-
-            AddEdgePoint(edgePoints, edge1, facePoint, vertices[v0], vertices[v1]);
-            AddEdgePoint(edgePoints, edge2, facePoint, vertices[v1], vertices[v2]);
-            AddEdgePoint(edgePoints, edge3, facePoint, vertices[v2], vertices[v0]);
+            int[] faceVertices = new int[] { triangles[i], triangles[i + 1], triangles[i + 2] };
+            Vector3 facePoint = ComputeFacePoint(mesh, faceVertices);
+            facePoints[i / 3] = facePoint;
         }
 
-        // Mise à jour des sommets originaux
-        for (int i = 0; i < vertices.Count; i++)
+        // Step 2: Compute all edge points and track adjacent faces
+        Dictionary<(int, int), Vector3> edgePoints = new Dictionary<(int, int), Vector3>();
+        Dictionary<(int, int), List<Vector3>> adjacentFacePoints = new Dictionary<(int, int), List<Vector3>>();
+
+        for (int i = 0; i < triangles.Length; i += 3)
         {
-            List<int> neighbors = vertexNeighborMap[i];
-            Vector3 sumFacePoints = Vector3.zero;
-            Vector3 sumEdgePoints = Vector3.zero;
+            int[] faceVertices = new int[] { triangles[i], triangles[i + 1], triangles[i + 2] };
+            Vector3 facePoint = facePoints[i / 3];
 
-            foreach (int neighbor in neighbors)
+            for (int j = 0; j < 3; j++)
             {
-                sumEdgePoints += (vertices[i] + vertices[neighbor]) / 2f;
+                int v0 = faceVertices[j];
+                int v1 = faceVertices[(j + 1) % 3];
+
+                if (!adjacentFacePoints.ContainsKey((v0, v1)))
+                {
+                    adjacentFacePoints[(v0, v1)] = new List<Vector3>();
+                    adjacentFacePoints[(v1, v0)] = new List<Vector3>();
+                }
+                if (!adjacentFacePoints[(v0, v1)].Contains(facePoint))
+                    adjacentFacePoints[(v0, v1)].Add(facePoint);
+                if (!adjacentFacePoints[(v1, v0)].Contains(facePoint))
+                    adjacentFacePoints[(v1, v0)].Add(facePoint);
             }
-
-            foreach (Vector3 facePoint in facePoints)
-            {
-                sumFacePoints += facePoint;
-            }
-
-            sumEdgePoints /= neighbors.Count;
-            sumFacePoints /= neighbors.Count;
-
-            Vector3 newVertex = (sumFacePoints + 2f * sumEdgePoints + (neighbors.Count - 3f) * vertices[i]) / neighbors.Count;
-            newVertices.Add(newVertex);
         }
 
+        foreach (var edge in adjacentFacePoints.Keys)
+        {
+            List<Vector3> faces = adjacentFacePoints[edge];
+            if (faces.Count == 2)
+            {
+                Vector3 edgePoint = ComputeEdgePoint(mesh, edge.Item1, edge.Item2, faces[0], faces[1]);
+                edgePoints[edge] = edgePoint;
+            }
+        }
+
+        // Step 3: Compute all vertex points
+        Dictionary<int, Vector3> vertexPoints = new Dictionary<int, Vector3>();
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            int vertexIndex = i;
+            List<Vector3> adjacentFaces = new List<Vector3>();
+            List<Vector3> adjacentEdges = new List<Vector3>();
+
+            foreach (var face in facePoints)
+            {
+                if (triangles[face.Key * 3] == vertexIndex || triangles[face.Key * 3 + 1] == vertexIndex || triangles[face.Key * 3 + 2] == vertexIndex)
+                {
+                    adjacentFaces.Add(face.Value);
+                }
+            }
+
+            foreach (var edge in edgePoints)
+            {
+                if (edge.Key.Item1 == vertexIndex || edge.Key.Item2 == vertexIndex)
+                {
+                    adjacentEdges.Add(edge.Value);
+                }
+            }
+
+            Vector3 vertexPoint = ComputeVertexPoint(mesh, vertexIndex, adjacentFaces, adjacentEdges);
+            vertexPoints[vertexIndex] = vertexPoint;
+        }
+
+        // Step 4: Create new faces
+        List<Vector3> newVertices = new List<Vector3>();
         List<int> newTriangles = new List<int>();
-        Dictionary<Edge, int> edgeMap = new Dictionary<Edge, int>();
 
         for (int i = 0; i < triangles.Length; i += 3)
         {
-            int v0 = triangles[i];
-            int v1 = triangles[i + 1];
-            int v2 = triangles[i + 2];
-
-            int f0 = newVertices.Count;
-            newVertices.Add(facePoints[i / 3]);
-
-            int e0 = GetEdgeVertex(v0, v1, vertices, edgeMap, newVertices, edgePoints);
-            int e1 = GetEdgeVertex(v1, v2, vertices, edgeMap, newVertices, edgePoints);
-            int e2 = GetEdgeVertex(v2, v0, vertices, edgeMap, newVertices, edgePoints);
-
-            newTriangles.AddRange(new int[] { v0, e0, f0, e2 });
-            newTriangles.AddRange(new int[] { v1, e1, f0, e0 });
-            newTriangles.AddRange(new int[] { v2, e2, f0, e1 });
-            newTriangles.AddRange(new int[] { e0, e1, f0, e2 });
+            int[] faceVertices = new int[] { triangles[i], triangles[i + 1], triangles[i + 2] };
+            Vector3 facePoint = facePoints[i / 3];
+            SubdivideFace(mesh, faceVertices, facePoint, edgePoints, vertexPoints, newVertices, newTriangles);
         }
 
-        Mesh subdividedMesh = new Mesh();
-        subdividedMesh.vertices = newVertices.ToArray();
-        subdividedMesh.triangles = newTriangles.ToArray();
-        subdividedMesh.RecalculateNormals();
+        // Update mesh with new vertices and triangles
+        mesh.Clear();
+        mesh.vertices = newVertices.ToArray();
+        mesh.triangles = newTriangles.ToArray();
+        mesh.RecalculateNormals();
 
-        return subdividedMesh;
+        return mesh;
     }
 
-    void AddNeighbor(Dictionary<int, List<int>> vertexNeighborMap, int v0, int v1)
+    int AddVertexIfNotExists(Vector3 vertex, List<Vector3> vertices)
     {
-        if (!vertexNeighborMap.ContainsKey(v0))
-            vertexNeighborMap[v0] = new List<int>();
-        vertexNeighborMap[v0].Add(v1);
+        int index = vertices.IndexOf(vertex);
+        if (index == -1)
+        {
+            index = vertices.Count;
+            vertices.Add(vertex);
+        }
+        return index;
     }
 
-    void AddEdgePoint(Dictionary<Edge, Vector3> edgePoints, Edge edge, Vector3 facePoint, Vector3 vertex0, Vector3 vertex1)
+
+    Vector3 ComputeFacePoint(Mesh mesh, int[] faceVertices)
     {
-        if (!edgePoints.ContainsKey(edge))
+        Vector3 facePoint = Vector3.zero;
+        foreach (int vertexIndex in faceVertices)
         {
-            edgePoints[edge] = (vertex0 + vertex1 + facePoint) / 3f;
+            facePoint += mesh.vertices[vertexIndex];
+        }
+        facePoint /= faceVertices.Length;
+        return facePoint;
+    }
+
+    Vector3 ComputeEdgePoint(Mesh mesh, int vertexIndex1, int vertexIndex2, Vector3 facePoint1, Vector3 facePoint2)
+    {
+        Vector3 edgePoint = (mesh.vertices[vertexIndex1] + mesh.vertices[vertexIndex2] + facePoint1 + facePoint2) / 4f;
+        return edgePoint;
+    }
+
+    Vector3 ComputeVertexPoint(Mesh mesh, int vertexIndex, List<Vector3> adjacentFacePoints, List<Vector3> adjacentEdgeMidPoints)
+    {
+        float n = adjacentFacePoints.Count;
+        Vector3 facePointSum = Vector3.zero;
+        foreach (Vector3 fp in adjacentFacePoints)
+        {
+            facePointSum += fp;
+        }
+        facePointSum/=adjacentFacePoints.Count;
+        Vector3 edgeMidPointSum = Vector3.zero;
+        foreach (Vector3 ep in adjacentEdgeMidPoints)
+        {
+            edgeMidPointSum += ep;
+        }
+        edgeMidPointSum/=adjacentEdgeMidPoints.Count;
+        Vector3 originalVertex = mesh.vertices[vertexIndex];
+        Vector3 vertexPoint = (facePointSum + 2f * edgeMidPointSum + (n - 3f) * originalVertex) / n;
+        return vertexPoint;
+    }
+
+    void SubdivideFace(Mesh mesh, int[] faceVertices, Vector3 facePoint, Dictionary<(int, int), Vector3> edgePoints, Dictionary<int, Vector3> vertexPoints, List<Vector3> newVertices, List<int> newTriangles)
+    {
+        int n = faceVertices.Length;
+
+        // Add face point to newVertices and get its index
+        int facePointIndex = newVertices.Count;
+        newVertices.Add(facePoint);
+
+        for (int i = 0; i < n; i++)
+        {
+            int v0 = faceVertices[i];
+            int v1 = faceVertices[(i + 1) % n];
+
+            // Ensure vertex points are added and retrieve their indices
+            Vector3 v0New = vertexPoints[v0];
+            Vector3 v1New = vertexPoints[v1];
+
+            int v0NewIndex = AddVertexIfNotExists(v0New, newVertices);
+            int v1NewIndex = AddVertexIfNotExists(v1New, newVertices);
+
+            // Ensure edge points are added and retrieve their indices
+            Vector3 e0 = edgePoints[(v0, v1)];
+            Vector3 e1 = edgePoints[(v1, v0)];
+
+            int e0Index = AddVertexIfNotExists(e0, newVertices);
+            int e1Index = AddVertexIfNotExists(e1, newVertices);
+
+            // Create new faces (triangles)
+            // Triangle 1: (v0New, e0, facePoint)
+            newTriangles.Add(v0NewIndex);
+            newTriangles.Add(e0Index);
+            newTriangles.Add(facePointIndex);
+
+            // Triangle 2: (e0, v1New, facePoint)
+            newTriangles.Add(e0Index);
+            newTriangles.Add(v1NewIndex);
+            newTriangles.Add(facePointIndex);
+
+            // Triangle 3: (v1New, e1, facePoint)
+            newTriangles.Add(v1NewIndex);
+            newTriangles.Add(e1Index);
+            newTriangles.Add(facePointIndex);
+
+            // Triangle 4: (e1, v0New, facePoint)
+            newTriangles.Add(e1Index);
+            newTriangles.Add(v0NewIndex);
+            newTriangles.Add(facePointIndex);
         }
     }
 
-    int GetEdgeVertex(int v0, int v1, List<Vector3> vertices, Dictionary<Edge, int> edgeMap, List<Vector3> newVertices, Dictionary<Edge, Vector3> edgePoints)
+    Mesh CreateCube()
     {
-        Edge edge = new Edge(v0, v1);
-        if (edgeMap.TryGetValue(edge, out int index))
-        {
-            return index;
-        }
-        else
-        {
-            Vector3 newVertex = edgePoints[edge];
-            newVertices.Add(newVertex);
-            index = newVertices.Count - 1;
-            edgeMap.Add(edge, index);
-            return index;
-        }
+        Mesh mesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = mesh;
+
+        // Define the 8 vertices of the cube
+        Vector3[] vertices = {
+            new Vector3(-0.5f, -0.5f, 0.5f),  // 0
+            new Vector3(0.5f, -0.5f, 0.5f),   // 1
+            new Vector3(0.5f, 0.5f, 0.5f),    // 2
+            new Vector3(-0.5f, 0.5f, 0.5f),   // 3
+            new Vector3(-0.5f, -0.5f, -0.5f), // 4
+            new Vector3(0.5f, -0.5f, -0.5f),  // 5
+            new Vector3(0.5f, 0.5f, -0.5f),   // 6
+            new Vector3(-0.5f, 0.5f, -0.5f)   // 7
+        };
+
+        // Define the 12 triangles (2 per face)
+        int[] triangles = {
+            // Front face
+            0, 1, 2,
+            0, 2, 3,
+            // Back face
+            4, 6, 5,
+            4, 7, 6,
+            // Left face
+            4, 5, 1,
+            4, 1, 0,
+            // Right face
+            1, 5, 6,
+            1, 6, 2,
+            // Top face
+            2, 6, 7,
+            2, 7, 3,
+            // Bottom face
+            4, 0, 3,
+            4, 3, 7
+        };
+
+        // Define the UVs (optional, for texturing)
+        Vector2[] uvs = {
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1),
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1)
+        };
+
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.uv = uvs;
+
+        // Recalculate normals for proper lighting
+        mesh.RecalculateNormals();
+
+        return mesh;
     }
+
+    Vector3 ComputeVertexPoint(List<Vector3> vertices, List<Vector3> facePoints, Dictionary<(int, int), Vector3> edgePoints, Dictionary<int, List<int>> adjacencyList, int vertexIndex)
+    {
+        List<int> adjVertices = adjacencyList[vertexIndex];
+        Vector3 vertex = vertices[vertexIndex];
+
+        Vector3 facePointSum = Vector3.zero;
+        Vector3 edgePointSum = Vector3.zero;
+        foreach (int adjVertex in adjVertices)
+        {
+            Vector3 edgePoint = edgePoints[(Mathf.Min(vertexIndex, adjVertex), Mathf.Max(vertexIndex, adjVertex))];
+            edgePointSum += edgePoint;
+        }
+
+        foreach (Vector3 facePoint in facePoints)
+        {
+            facePointSum += facePoint;
+        }
+
+        Vector3 newVertex = (facePointSum + 2 * edgePointSum + (adjVertices.Count - 3) * vertex) / adjVertices.Count;
+        return newVertex;
+    }
+
 
     struct Edge
     {
