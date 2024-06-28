@@ -26,7 +26,7 @@ public class LoopSubdivision : MonoBehaviour
             mesh = Subdivide(mesh);
         }
 
-        // Assigner le maillage subdivis� au MeshFilter et recalculer les normales
+        // Assigner le maillage subdivisé au MeshFilter et recalculer les normales
         meshFilter.mesh = mesh;
         meshFilter.mesh.RecalculateNormals();
     }
@@ -37,7 +37,7 @@ public class LoopSubdivision : MonoBehaviour
         List<Vector3> newVertices = new List<Vector3>(mesh.vertices);
         List<int> newTriangles = new List<int>();
 
-        // Cr�er des points de bord pour chaque ar�te
+        // Créer des points de bord pour chaque arête (nouveaux sommets au milieu des arêtes)
         for (int i = 0; i < mesh.triangles.Length; i += 3)
         {
             int v0 = mesh.triangles[i];
@@ -54,7 +54,7 @@ public class LoopSubdivision : MonoBehaviour
             newTriangles.AddRange(new int[] { m0, m1, m2 });
         }
     
-        // R�ajuster les positions des sommets existants
+        // Réajuster les positions des sommets existants
         Vector3[] originalVertices = mesh.vertices;
         Vector3[] adjustedVertices = new Vector3[originalVertices.Length];
         for (int i = 0; i < originalVertices.Length; i++)
@@ -73,6 +73,7 @@ public class LoopSubdivision : MonoBehaviour
         return mesh;
     }
 
+    // Ajuster position sommets en fonction des sommets voisins
     Vector3 AdjustVertex(int index, Vector3[] vertices, Dictionary<Edge, int> edgeMap)
     {
         List<int> neighborIndices = new List<int>();
@@ -101,6 +102,7 @@ public class LoopSubdivision : MonoBehaviour
         return newPos;
     }
 
+    // retourne nvx sommets au milieu des arêtes
     int GetEdgeVertex(int v0, int v1, Mesh mesh, Dictionary<Edge, int> edgeMap, List<Vector3> newVertices)
     {
         Vector3[] vertices = mesh.vertices;
@@ -121,6 +123,7 @@ public class LoopSubdivision : MonoBehaviour
         }
     }
 
+    //  explore tous les triangles du maillage pour trouver ceux qui contiennent l'arête spécifiée et retourne les sommets de ces triangles
     List<Vector3> FindOtherVerticesOfAdjacentTriangles(Mesh mesh, int v0, int v1)
     {
         List<Vector3> otherVertices = new List<Vector3>();
