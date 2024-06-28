@@ -47,7 +47,7 @@ public class CatmullClarkSubdivision : MonoBehaviour
         }
 
         // Step 2: Compute all edge points and track adjacent faces
-        Dictionary<(int, int), Vector3> edgePoints = new Dictionary<(int, int), Vector3>();
+        Dictionary<(int, int), List<Vector3>> edgePoints = new Dictionary<(int, int), List<Vector3>>();
         Dictionary<(int, int), List<Vector3>> adjacentFacePoints = new Dictionary<(int, int), List<Vector3>>();
 
         for (int i = 0; i < triangles.Length; i += 3)
@@ -60,15 +60,18 @@ public class CatmullClarkSubdivision : MonoBehaviour
                 int v0 = faceVertices[j];
                 int v1 = faceVertices[(j + 1) % 3];
 
-                if (!adjacentFacePoints.ContainsKey((v0, v1)))
+                // Ensure the key order is consistent
+                var key = v0 < v1 ? (v0, v1) : (v1, v0);
+
+                if (!adjacentFacePoints.ContainsKey(key))
                 {
-                    adjacentFacePoints[(v0, v1)] = new List<Vector3>();
-                    adjacentFacePoints[(v1, v0)] = new List<Vector3>();
+                    adjacentFacePoints[key] = new List<Vector3>();
                 }
-                if (!adjacentFacePoints[(v0, v1)].Contains(facePoint))
-                    adjacentFacePoints[(v0, v1)].Add(facePoint);
-                if (!adjacentFacePoints[(v1, v0)].Contains(facePoint))
-                    adjacentFacePoints[(v1, v0)].Add(facePoint);
+
+                if (!adjacentFacePoints[key].Contains(facePoint))
+                {
+                    adjacentFacePoints[key].Add(facePoint);
+                }
             }
         }
 
@@ -78,7 +81,9 @@ public class CatmullClarkSubdivision : MonoBehaviour
             if (faces.Count == 2)
             {
                 Vector3 edgePoint = ComputeEdgePoint(mesh, edge.Item1, edge.Item2, faces[0], faces[1]);
-                edgePoints[edge] = edgePoint;
+                Vector3 edgePoint2 = ComputeEdgePoint(mesh, edge.Item2, edge.Item1, faces[0], faces[1]);
+
+                edgePoints[edge] = new List<Vector3>{ edgePoint, edgePoint2 };
             }
         }
 
@@ -102,7 +107,10 @@ public class CatmullClarkSubdivision : MonoBehaviour
             {
                 if (edge.Key.Item1 == vertexIndex || edge.Key.Item2 == vertexIndex)
                 {
-                    adjacentEdges.Add(edge.Value);
+                    if(!adjacentEdges.Contains(edge.Value[0]))
+                        adjacentEdges.Add(edge.Value[0]);
+                    if(!adjacentEdges.Contains(edge.Value[1]))
+                        adjacentEdges.Add(edge.Value[1]);
                 }
             }
 
@@ -126,71 +134,69 @@ public class CatmullClarkSubdivision : MonoBehaviour
         mesh.vertices = newVertices.ToArray();
         mesh.triangles = newTriangles.ToArray();
         mesh.RecalculateNormals();
-
         return mesh;
     }
 
-    int AddVertexIfNotExists(Vector3 vertex, List<Vector3> vertices)
-    {
-        int index = vertices.IndexOf(vertex);
-        if (index == -1)
-        {
-            index = vertices.Count;
-            vertices.Add(vertex);
-        }
-        return index;
-    }
-
-
     Vector3 ComputeFacePoint(Mesh mesh, int[] faceVertices)
     {
+        Vector3[] vertices = mesh.vertices;
         Vector3 facePoint = Vector3.zero;
-        foreach (int vertexIndex in faceVertices)
+
+        foreach (int vertex in faceVertices)
         {
-            facePoint += mesh.vertices[vertexIndex];
+            facePoint += vertices[vertex];
         }
+
         facePoint /= faceVertices.Length;
         return facePoint;
     }
 
-    Vector3 ComputeEdgePoint(Mesh mesh, int vertexIndex1, int vertexIndex2, Vector3 facePoint1, Vector3 facePoint2)
+    Vector3 ComputeEdgePoint(Mesh mesh, int v0, int v1, Vector3 facePoint1, Vector3 facePoint2)
     {
-        Vector3 edgePoint = (mesh.vertices[vertexIndex1] + mesh.vertices[vertexIndex2] + facePoint1 + facePoint2) / 4f;
+        Vector3[] vertices = mesh.vertices;
+        Vector3 edgePoint = (vertices[v0] + vertices[v1] + facePoint1 + facePoint2) / 4.0f;
         return edgePoint;
     }
 
-    Vector3 ComputeVertexPoint(Mesh mesh, int vertexIndex, List<Vector3> adjacentFacePoints, List<Vector3> adjacentEdgeMidPoints)
+    Vector3 ComputeVertexPoint(Mesh mesh, int vertexIndex, List<Vector3> adjacentFaces, List<Vector3> adjacentEdges)
     {
-        float n = adjacentFacePoints.Count;
-        Vector3 facePointSum = Vector3.zero;
-        foreach (Vector3 fp in adjacentFacePoints)
+        Vector3[] vertices = mesh.vertices;
+        Vector3 originalVertex = vertices[vertexIndex];
+
+        Vector3 facePointsSum = Vector3.zero;
+        foreach (Vector3 face in adjacentFaces)
         {
-            facePointSum += fp;
+            facePointsSum += face;
         }
-        facePointSum/=adjacentFacePoints.Count;
-        Vector3 edgeMidPointSum = Vector3.zero;
-        foreach (Vector3 ep in adjacentEdgeMidPoints)
+        facePointsSum /= adjacentFaces.Count;
+
+        Vector3 edgePointsSum = Vector3.zero;
+        foreach (Vector3 edge in adjacentEdges)
         {
-            edgeMidPointSum += ep;
+            edgePointsSum += edge;
         }
-        edgeMidPointSum/=adjacentEdgeMidPoints.Count;
-        Vector3 originalVertex = mesh.vertices[vertexIndex];
-        Vector3 vertexPoint = (facePointSum + 2f * edgeMidPointSum + (n - 3f) * originalVertex) / n;
-        return vertexPoint;
+        edgePointsSum /= adjacentEdges.Count;
+
+        float n = adjacentFaces.Count;
+
+        Vector3 newVertex = (facePointsSum + 2 * edgePointsSum + originalVertex * (n - 3)) / n;
+        return newVertex;
     }
 
-    void SubdivideFace(Mesh mesh, int[] faceVertices, Vector3 facePoint, Dictionary<(int, int), Vector3> edgePoints, Dictionary<int, Vector3> vertexPoints, List<Vector3> newVertices, List<int> newTriangles)
+
+    void SubdivideFace(Mesh mesh, int[] faceVertices, Vector3 facePoint, Dictionary<(int, int), List<Vector3>> edgePoints, Dictionary<int, Vector3> vertexPoints, List<Vector3> newVertices, List<int> newTriangles)
     {
         int n = faceVertices.Length;
 
         // Add face point to newVertices and get its index
-        int facePointIndex = newVertices.Count;
-        newVertices.Add(facePoint);
+        int facePointIndex = AddVertexIfNotExists(facePoint, newVertices);
 
         for (int i = 0; i < n; i++)
         {
             int v0 = faceVertices[i];
             int v1 = faceVertices[(i + 1) % n];
+
+            var key = v0 < v1 ? (v0, v1) : (v1, v0);
 
             // Ensure vertex points are added and retrieve their indices
             Vector3 v0New = vertexPoints[v0];
@@ -200,11 +206,10 @@ public class CatmullClarkSubdivision : MonoBehaviour
             int v1NewIndex = AddVertexIfNotExists(v1New, newVertices);
 
             // Ensure edge points are added and retrieve their indices
-            Vector3 e0 = edgePoints[(v0, v1)];
-            Vector3 e1 = edgePoints[(v1, v0)];
+            Vector3 e0 = edgePoints[key][0];
+            Vector3 e1 = edgePoints[key][1];
 
             int e0Index = AddVertexIfNotExists(e0, newVertices);
-            int e1Index = AddVertexIfNotExists(e1, newVertices);
 
             // Create new faces (triangles)
             // Triangle 1: (v0New, e0, facePoint)
@@ -216,17 +221,18 @@ public class CatmullClarkSubdivision : MonoBehaviour
             newTriangles.Add(e0Index);
             newTriangles.Add(v1NewIndex);
             newTriangles.Add(facePointIndex);
-
-            // Triangle 3: (v1New, e1, facePoint)
-            newTriangles.Add(v1NewIndex);
-            newTriangles.Add(e1Index);
-            newTriangles.Add(facePointIndex);
-
-            // Triangle 4: (e1, v0New, facePoint)
-            newTriangles.Add(e1Index);
-            newTriangles.Add(v0NewIndex);
-            newTriangles.Add(facePointIndex);
         }
+    }
+
+    int AddVertexIfNotExists(Vector3 vertex, List<Vector3> vertices)
+    {
+        int index = vertices.IndexOf(vertex);
+        if (index == -1)
+        {
+            index = vertices.Count;
+            vertices.Add(vertex);
+        }
+        return index;
     }
 
     Mesh CreateCube()
