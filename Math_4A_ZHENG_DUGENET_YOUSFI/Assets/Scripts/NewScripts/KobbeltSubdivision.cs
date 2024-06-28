@@ -7,6 +7,7 @@ public class KobbeltSubdivision : MonoBehaviour
     public MeshFilter meshFilter;
     public int subdivisions = 1;
     private Mesh meshcopy;
+
     void Start()
     {
         meshcopy = CreateCube();
@@ -14,12 +15,13 @@ public class KobbeltSubdivision : MonoBehaviour
         for (int i = 0; i < subdivisions; i++)
         {
             meshcopy = Subdivide(meshcopy);
-            //perturb(meshcopy);
+            perturb(meshcopy);
+            meshcopy = FlipEdges(meshcopy);
         }
 
         MeshFilter meshFilterthis = GetComponent<MeshFilter>();
         meshFilterthis.mesh = meshcopy;
-        
+
         MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
         meshRenderer.material = meshFilter.GetComponent<MeshRenderer>().sharedMaterial;
     }
@@ -28,8 +30,7 @@ public class KobbeltSubdivision : MonoBehaviour
     {
         List<Vector3> newVertices = new List<Vector3>(mesh.vertices);
         List<int> newTriangles = new List<int>();
-
-        Dictionary<int, List<int>> adjDict = FindAdjacentTriangles(mesh);
+        Dictionary<int, int> centerIndexDict = new Dictionary<int, int>();
 
         for (int i = 0; i < mesh.triangles.Length; i += 3)
         {
@@ -41,49 +42,89 @@ public class KobbeltSubdivision : MonoBehaviour
             Vector3 p1 = mesh.vertices[v1];
             Vector3 p2 = mesh.vertices[v2];
 
-            Vector3 barycenter = (p0 + p1 + p2) / 3.0f;
-            newVertices.Add(barycenter);
-            int barycenterIndex = newVertices.Count - 1;
+            Vector3 center = (p0 + p1 + p2) / 3.0f;
+            int centerIndex = newVertices.Count;
+            newVertices.Add(center);
 
-            // Create new triangles from the current triangle
-            //newTriangles.AddRange(new int[] { v0, v1, barycenterIndex });
-            //newTriangles.AddRange(new int[] { v1, v2, barycenterIndex });
-            //newTriangles.AddRange(new int[] { v2, v0, barycenterIndex });
+            newTriangles.AddRange(new int[] { v0, v1, centerIndex });
+            newTriangles.AddRange(new int[] { v1, v2, centerIndex });
+            newTriangles.AddRange(new int[] { v2, v0, centerIndex });
 
-            // Find adjacent triangles and create new triangles between barycenters
-            foreach (var adjacentIndex in adjDict[i / 3])
-            {
-                int av0 = mesh.triangles[adjacentIndex * 3];
-                int av1 = mesh.triangles[adjacentIndex * 3 + 1];
-                int av2 = mesh.triangles[adjacentIndex * 3 + 2];
-
-                Vector3 ap0 = mesh.vertices[av0];
-                Vector3 ap1 = mesh.vertices[av1];
-                Vector3 ap2 = mesh.vertices[av2];
-
-                var pointList = new List<int>() { av0, av1, av2 };
-
-                Vector3 adjacentBarycenter = (ap0 + ap1 + ap2) / 3.0f;
-                int adjacentBarycenterIndex = newVertices.IndexOf(adjacentBarycenter);
-                if (adjacentBarycenterIndex == -1)
-                {
-                    newVertices.Add(adjacentBarycenter);
-                    adjacentBarycenterIndex = newVertices.Count - 1;
-                }
-
-                if (pointList.Contains(v0))
-                    newTriangles.AddRange(new int[] { barycenterIndex, adjacentBarycenterIndex, v0 });
-                if (pointList.Contains(v1))
-                    newTriangles.AddRange(new int[] { barycenterIndex, adjacentBarycenterIndex, v1 });
-                if (pointList.Contains(v2))
-                    newTriangles.AddRange(new int[] { barycenterIndex, adjacentBarycenterIndex, v2 });
-            }
+            centerIndexDict[i / 3] = centerIndex;
         }
 
         mesh.vertices = newVertices.ToArray();
         mesh.triangles = newTriangles.ToArray();
         mesh.RecalculateNormals();
         return mesh;
+    }
+
+    Mesh FlipEdges(Mesh mesh)
+    {
+        List<Vector3> vertices = new List<Vector3>(mesh.vertices);
+        List<int> triangles = new List<int>(mesh.triangles);
+
+        Dictionary<(int, int), int> edgeMidpointDict = new Dictionary<(int, int), int>();
+
+        List<int> newTriangles = new List<int>();
+
+        for (int i = 0; i < triangles.Count; i += 3)
+        {
+            int v0 = triangles[i];
+            int v1 = triangles[i + 1];
+            int v2 = triangles[i + 2];
+
+            (int, int) edge0 = (Mathf.Min(v0, v1), Mathf.Max(v0, v1));
+            (int, int) edge1 = (Mathf.Min(v1, v2), Mathf.Max(v1, v2));
+            (int, int) edge2 = (Mathf.Min(v2, v0), Mathf.Max(v2, v0));
+
+            if (!edgeMidpointDict.ContainsKey(edge0))
+            {
+                Vector3 midPoint = (vertices[v0] + vertices[v1]) / 2.0f;
+                edgeMidpointDict[edge0] = vertices.Count;
+                vertices.Add(midPoint);
+            }
+            if (!edgeMidpointDict.ContainsKey(edge1))
+            {
+                Vector3 midPoint = (vertices[v1] + vertices[v2]) / 2.0f;
+                edgeMidpointDict[edge1] = vertices.Count;
+                vertices.Add(midPoint);
+            }
+            if (!edgeMidpointDict.ContainsKey(edge2))
+            {
+                Vector3 midPoint = (vertices[v2] + vertices[v0]) / 2.0f;
+                edgeMidpointDict[edge2] = vertices.Count;
+                vertices.Add(midPoint);
+            }
+
+            int m0 = edgeMidpointDict[edge0];
+            int m1 = edgeMidpointDict[edge1];
+            int m2 = edgeMidpointDict[edge2];
+
+            newTriangles.AddRange(new int[] { v0, m0, m2 });
+            newTriangles.AddRange(new int[] { v1, m1, m0 });
+            newTriangles.AddRange(new int[] { v2, m2, m1 });
+            newTriangles.AddRange(new int[] { m0, m1, m2 });
+        }
+
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = newTriangles.ToArray();
+        mesh.RecalculateNormals();
+
+        return mesh;
+    }
+
+    int GetOrCreateMidpoint(List<Vector3> vertices, Dictionary<Edge, int> edgeMidpointDict, int v0, int v1,
+        Vector3 midpoint)
+    {
+        Edge edge = new Edge(v0, v1);
+        if (!edgeMidpointDict.ContainsKey(edge))
+        {
+            edgeMidpointDict[edge] = vertices.Count;
+            vertices.Add(midpoint);
+        }
+
+        return edgeMidpointDict[edge];
     }
 
     Dictionary<int, List<int>> FindAdjacentTriangles(Mesh mesh)
@@ -119,6 +160,7 @@ public class KobbeltSubdivision : MonoBehaviour
                     adjacencyList[triangleIndex] = new List<int>();
                     adjacencyList[triangleIndex].Add(kvp.Key);
                 }
+
                 return;
             }
         }
@@ -127,6 +169,7 @@ public class KobbeltSubdivision : MonoBehaviour
         {
             adjacencyList[triangleIndex] = new List<int>();
         }
+
         adjacencyList[triangleIndex].Add(v0);
         adjacencyList[triangleIndex].Add(v1);
     }
@@ -135,7 +178,7 @@ public class KobbeltSubdivision : MonoBehaviour
     {
         Vector3[] vertex = new Vector3[mesh.vertices.Length];
         var adjDict = FindAdjacentVertices(mesh);
-        for(int i = 0; i < mesh.vertices.Length; i++)
+        for (int i = 0; i < mesh.vertices.Length; i++)
         {
             var adj = adjDict[i];
             float n = adj.Count;
@@ -145,6 +188,7 @@ public class KobbeltSubdivision : MonoBehaviour
             {
                 sum += mesh.vertices[index];
             }
+
             var alpha = (1.0f / 9.0f) * (4.0f - 2.0f * Mathf.Cos(2.0f * Mathf.PI / n));
             Vector3 vPrime = (1 - alpha) * curP + (alpha / n) * sum;
             vertex[i] = vPrime;
@@ -182,6 +226,7 @@ public class KobbeltSubdivision : MonoBehaviour
         {
             adjacencyList[vertex] = new List<int>();
         }
+
         if (!adjacencyList[vertex].Contains(adjacentVertex))
         {
             adjacencyList[vertex].Add(adjacentVertex);
@@ -194,19 +239,21 @@ public class KobbeltSubdivision : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
 
         // Define the 8 vertices of the cube
-        Vector3[] vertices = {
-            new Vector3(-0.5f, -0.5f, 0.5f),  // 0
-            new Vector3(0.5f, -0.5f, 0.5f),   // 1
-            new Vector3(0.5f, 0.5f, 0.5f),    // 2
-            new Vector3(-0.5f, 0.5f, 0.5f),   // 3
+        Vector3[] vertices =
+        {
+            new Vector3(-0.5f, -0.5f, 0.5f), // 0
+            new Vector3(0.5f, -0.5f, 0.5f), // 1
+            new Vector3(0.5f, 0.5f, 0.5f), // 2
+            new Vector3(-0.5f, 0.5f, 0.5f), // 3
             new Vector3(-0.5f, -0.5f, -0.5f), // 4
-            new Vector3(0.5f, -0.5f, -0.5f),  // 5
-            new Vector3(0.5f, 0.5f, -0.5f),   // 6
-            new Vector3(-0.5f, 0.5f, -0.5f)   // 7
+            new Vector3(0.5f, -0.5f, -0.5f), // 5
+            new Vector3(0.5f, 0.5f, -0.5f), // 6
+            new Vector3(-0.5f, 0.5f, -0.5f) // 7
         };
 
         // Define the 12 triangles (2 per face)
-        int[] triangles = {
+        int[] triangles =
+        {
             // Front face
             0, 1, 2,
             0, 2, 3,
@@ -228,7 +275,8 @@ public class KobbeltSubdivision : MonoBehaviour
         };
 
         // Define the UVs (optional, for texturing)
-        Vector2[] uvs = {
+        Vector2[] uvs =
+        {
             new Vector2(0, 0),
             new Vector2(1, 0),
             new Vector2(1, 1),
@@ -247,5 +295,32 @@ public class KobbeltSubdivision : MonoBehaviour
         mesh.RecalculateNormals();
 
         return mesh;
+    }
+
+    struct Edge
+    {
+        public int v0;
+        public int v1;
+
+        public Edge(int v0, int v1)
+        {
+            this.v0 = Mathf.Min(v0, v1);
+            this.v1 = Mathf.Max(v0, v1);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Edge))
+            {
+                return false;
+            }
+            Edge other = (Edge)obj;
+            return this.v0 == other.v0 && this.v1 == other.v1;
+        }
+
+        public override int GetHashCode()
+        {
+            return v0.GetHashCode() ^ v1.GetHashCode();
+        }
     }
 }

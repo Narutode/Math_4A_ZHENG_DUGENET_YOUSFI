@@ -9,10 +9,10 @@ public class LoopSubdivision : MonoBehaviour
 
     void Start()
     {
-        // Récupérer le MeshFilter du GameObject auquel ce script est attaché
+        // Rï¿½cupï¿½rer le MeshFilter du GameObject auquel ce script est attachï¿½
         meshFilter = GetComponent<MeshFilter>();
 
-        // Vérifier si le MeshFilter est valide
+        // Vï¿½rifier si le MeshFilter est valide
         if (meshFilter == null || meshFilter.mesh == null)
         {
             Debug.LogError("MeshFilter or mesh not assigned properly.");
@@ -20,13 +20,13 @@ public class LoopSubdivision : MonoBehaviour
         }
 
         // Subdiviser le maillage du cube avec Loop subdivision steps fois
-        Mesh mesh = CreateCube();
+        Mesh mesh = CreateTetrahedron();
         for (int i = 0; i < subdivisionSteps; i++)
         {
             mesh = Subdivide(mesh);
         }
 
-        // Assigner le maillage subdivisé au MeshFilter et recalculer les normales
+        // Assigner le maillage subdivisï¿½ au MeshFilter et recalculer les normales
         meshFilter.mesh = mesh;
         meshFilter.mesh.RecalculateNormals();
     }
@@ -37,7 +37,7 @@ public class LoopSubdivision : MonoBehaviour
         List<Vector3> newVertices = new List<Vector3>(mesh.vertices);
         List<int> newTriangles = new List<int>();
 
-        // Créer des points de bord pour chaque arête
+        // Crï¿½er des points de bord pour chaque arï¿½te
         for (int i = 0; i < mesh.triangles.Length; i += 3)
         {
             int v0 = mesh.triangles[i];
@@ -54,7 +54,7 @@ public class LoopSubdivision : MonoBehaviour
             newTriangles.AddRange(new int[] { m0, m1, m2 });
         }
     
-        // Réajuster les positions des sommets existants
+        // Rï¿½ajuster les positions des sommets existants
         Vector3[] originalVertices = mesh.vertices;
         Vector3[] adjustedVertices = new Vector3[originalVertices.Length];
         for (int i = 0; i < originalVertices.Length; i++)
@@ -230,5 +230,50 @@ public class LoopSubdivision : MonoBehaviour
             Edge other = (Edge)obj;
             return v0 == other.v0 && v1 == other.v1;
         }
+    }
+    Mesh CreateTetrahedron()
+    {
+        Mesh mesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = mesh;
+
+        // Define the 4 vertices of the tetrahedron
+        Vector3[] vertices =
+        {
+            new Vector3(1, 1, 1),
+            new Vector3(-1, -1, 1),
+            new Vector3(-1, 1, -1),
+            new Vector3(1, -1, -1)
+        };
+
+        // Define the 4 triangles (each with 3 vertices) in counter-clockwise order
+        int[] triangles =
+        {
+            // Triangle 1
+            0, 2, 1,
+            // Triangle 2
+            0, 1, 3,
+            // Triangle 3
+            0, 3, 2,
+            // Triangle 4
+            1, 2, 3
+        };
+
+        // Define the UVs (optional, for texturing)
+        Vector2[] uvs =
+        {
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(0.5f, 1),
+            new Vector2(0.5f, 0.5f)
+        };
+
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.uv = uvs;
+
+        // Recalculate normals for proper lighting
+        mesh.RecalculateNormals();
+
+        return mesh;
     }
 }
